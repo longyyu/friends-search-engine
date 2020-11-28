@@ -1,0 +1,16 @@
+
+prefix = "."
+
+dataset = "friends"
+corpus = "tutorial.toml"
+
+index = "friends-idx"
+
+query-judgements = "friends/friends-qrels.txt"
+
+stop-words = "lemur-stopwords.txt"
+
+[[analyzers]]
+method = "ngram-word"
+ngram = 1
+filter = "default-unigram-chain"
