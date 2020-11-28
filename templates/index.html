@@ -2,12 +2,12 @@
 
 {% import "bootstrap/wtf.html" as wtf %}
 
-{% block title %} Search FRIENDS quotes {% endblock %}
+{% block title %} Search FRIENDS Quotes {% endblock %}
 
 {% block content %}
-  <div class="container" style="margin: auto; text-align: center; padding: 100px 0;">
+  <div class="container" style="margin: auto; text-align: center; padding: 100px 0 50px 0;">
     <h1>
-      Search <img src="/static/FriendsLogo.png" alt="FRIENDS"> quotes
+      Search <img src="/static/FriendsLogo.png" alt="FRIENDS"> Quotes
     </h1>
     <br>
     <p>
@@ -16,4 +16,20 @@
       ) }}
     </p>
   </div>
+
+  <div class="container" style="margin: auto; text-align: center; padding: 30px 0;">
+    <p style="font-size: 16px;">
+      Don't know where to start? Explore the following queries! 
+    </p>
+
+    {% for img in imgs %}
+    <a href="{{url_for('search_results', query = img)}}">
+      <figure>
+        <img src="/static/sample-search/{{img}}.png" style="width:100%">
+        <figcaption>{{img}}</figcaption>
+      </figure>
+    </a>
+    {% endfor %}
+  </div>
+
 {% endblock %}
