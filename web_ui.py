@@ -5,6 +5,7 @@ from wtforms import StringField, SubmitField
 from wtforms.validators import DataRequired
 from datetime import datetime
 
+import os
 from metapy import metapy
 from config_metapy import config_file, inv_idx, get_retrieval_results
 from data_prep import script_utterance, get_script_with_u_id
@@ -19,7 +20,7 @@ class SearchForm(FlaskForm):
       validators = [DataRequired()],
       render_kw = {
         "placeholder": "Joey doesn't share food!",
-        "style": "width: 500px;"
+        "style": "width: 500px; font-size: 15px;"
       }
     )
     search_button = SubmitField("Search!")
@@ -27,12 +28,17 @@ class SearchForm(FlaskForm):
 
 @app.route("/", methods=["GET", "POST"])
 def index():
+    sample_search_img = [item.replace(".png", "") 
+      for item in os.listdir("./static/sample-search/")
+    ]
     search_form = SearchForm(meta={'csrf': False})
     if search_form.validate_on_submit():
         return redirect(
           url_for("search_results", query = search_form.user_query.data)
         )
-    return render_template("index.html", form = search_form)
+    return render_template("index.html", 
+                           form = search_form,
+                           imgs = sample_search_img)
 
 
 @app.route("/search_results/<query>", methods=["GET", "POST"])
