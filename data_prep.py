@@ -12,9 +12,8 @@ import json
 import pandas as pd
 import re
 
-# os.chdir("E:/git/SI650.git/proj/")
-# json_dir = "E:/git/character-mining/json/"
-# json_file = json_dir + "friends_season_{:02d}.json"
+json_dir = "./data/json/"
+json_file = json_dir + "friends_season_{:02d}.json"
 output_dir = "./data/"
 
 # Data preparation ------------------------------------------------------------
