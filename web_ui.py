@@ -1,7 +1,7 @@
 from flask import Flask, render_template, redirect, url_for, request, abort
 from flask_bootstrap import Bootstrap
 from flask_wtf import FlaskForm
-from wtforms import StringField, SubmitField
+from wtforms import SelectField, StringField, SubmitField
 from wtforms.validators import DataRequired
 from datetime import datetime
 
@@ -20,6 +20,15 @@ Bootstrap(app)
 
 
 class SearchForm(FlaskForm):
+    character = SelectField("Filter by character", 
+      choices = [("", "Select a character"), 
+                 ("Chandler Bing", "Chandler"), 
+                 ("Joey Tribbiani", "Joey"), 
+                 ("Monica Geller", "Monica"),
+                 ("Phoebe Buffay", "Phoebe"), 
+                 ("Rachel Green", "Rachel"), 
+                 ("Ross Geller", "Ross")]
+    )
     user_query = StringField(
       validators = [DataRequired()],
       render_kw = {
@@ -37,16 +46,19 @@ def index():
     ]
     search_form = SearchForm(meta={'csrf': False})
     if search_form.validate_on_submit():
-        return redirect(
-          url_for("search_results", query = search_form.user_query.data)
-        )
+        return redirect(url_for("search_results", 
+          query = search_form.user_query.data,
+          character = search_form.character.data
+        ))
     return render_template("index.html", 
                            form = search_form,
                            imgs = sample_search_img)
 
 
-@app.route("/search_results/<query>", methods=["GET", "POST"])
-def search_results(query):
+@app.route("/search_results/q=<query>", 
+           methods=["GET", "POST"], defaults={'character': ""})
+@app.route("/search_results/q=<query>/c=<character>", methods=["GET", "POST"])
+def search_results(query, character):
     start_time = datetime.now()
     # result_list = get_retrieval_results(
     #   query_content = query,
@@ -56,7 +68,7 @@ def search_results(query):
     #   num_results = 10 #! should not limit the # of results?
     # )
     result_list = get_retrieval_results(
-      query = query, query_doc_id = indexes.doc_id
+      query = query, filter_by_character = character
     )
     docs = [get_script_with_u_id(
               df = script_utterance, 
@@ -68,14 +80,16 @@ def search_results(query):
 
     search_form = SearchForm(meta={'csrf': False})
     if search_form.validate_on_submit():
-      return redirect(
-        url_for("search_results", query = search_form.user_query.data)
-      )
+      return redirect(url_for("search_results", 
+        query = search_form.user_query.data,
+        character = search_form.character.data
+      ))
     
     return render_template("search_results.html",
                            processing_time = (finish_time - start_time),
                            total_doc_num = len(docs),
                            query = query,
+                           character = character,
                            docs = docs,
                            form = search_form)
 
