@@ -98,7 +98,7 @@ def get_script_with_u_id(df, u_id, plus_minus = 0, output_format = "terminal"):
   else:
       cid = pd.Series(u_id).str.extract(r"(.*)_u").loc[0, 0]
       row_idx = df.loc[(df.u_id == u_id)].index.tolist()[0]
-      target_uid = df.loc[range(row_idx-plus_minus, 
+      target_uid = df.loc[range(max(0, row_idx-plus_minus), 
                                 row_idx+plus_minus + 1), 'u_id']
       target_uid = target_uid[target_uid.str.contains(cid)]
 
