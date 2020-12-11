@@ -4,11 +4,13 @@ from flask_wtf import FlaskForm
 from wtforms import SelectField, StringField, SubmitField
 from wtforms.validators import DataRequired
 from datetime import datetime
+import re
 
 import os
 #from metapy import metapy
 #from config_metapy import config_file, inv_idx, get_retrieval_results
-from data_prep import script_utterance, get_script_with_uid
+from data_prep import script_utterance, get_script_with_uid, \
+                      get_episode_with_uid
 from inverted_index import indexes, get_retrieval_results
 
 # Purpose: This script #! add header
@@ -92,6 +94,15 @@ def search_results(query, character):
                          character = character,
                          docs = docs,
                          form = search_form)
+
+
+@app.route("/script/<uid>")
+def script(uid):
+  sid= int(re.compile("s([0-9]{2})").findall(uid)[0])
+  eid= int(re.compile("e([0-9]{2})").findall(uid)[0])
+  return render_template("script.html", 
+                         episode_id = "Season {} Episode {}".format(sid, eid), 
+                         script = get_episode_with_uid(script_utterance, uid))
 
 if __name__ == "__main__":
   app.run(threaded = False)
