@@ -1,14 +1,11 @@
-
-prefix = "."
-
+prefix = "./data"
 dataset = "friends"
 corpus = "tutorial.toml"
 
-index = "friends-idx"
+index = "./data/friends-idx"
 
-query-judgements = "friends/friends-qrels.txt"
-
-stop-words = "lemur-stopwords.txt"
+query-judgements = "./data/friends-qrels.txt"
+stop-words = "./data/lemur-stopwords.txt"
 
 [[analyzers]]
 method = "ngram-word"
