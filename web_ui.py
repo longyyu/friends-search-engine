@@ -6,10 +6,14 @@ from wtforms.validators import DataRequired
 from datetime import datetime
 
 import os
-from metapy import metapy
-from config_metapy import config_file, inv_idx, get_retrieval_results
+#from metapy import metapy
+#from config_metapy import config_file, inv_idx, get_retrieval_results
 from data_prep import script_utterance, get_script_with_u_id
+from inverted_index import indexes, get_retrieval_results
 
+# Purpose: This script #! add header
+# Author: Yanyu Long
+# Updated: Dec 11, 2020
 
 app = Flask(__name__)
 Bootstrap(app)
@@ -44,12 +48,15 @@ def index():
 @app.route("/search_results/<query>", methods=["GET", "POST"])
 def search_results(query):
     start_time = datetime.now()
+    # result_list = get_retrieval_results(
+    #   query_content = query,
+    #   ranker =  metapy.index.OkapiBM25(k1 = 1.2, b = 0.75, k3 = 500),
+    #   inv_idx = inv_idx,
+    #   df_uid = script_utterance,
+    #   num_results = 10 #! should not limit the # of results?
+    # )
     result_list = get_retrieval_results(
-      query_content = query,
-      ranker =  metapy.index.OkapiBM25(k1 = 1.2, b = 0.75, k3 = 500),
-      inv_idx = inv_idx,
-      df_uid = script_utterance,
-      num_results = 10 #! should not limit the # of results?
+      query = query, query_doc_id = indexes.doc_id
     )
     docs = [get_script_with_u_id(
               df = script_utterance, 
