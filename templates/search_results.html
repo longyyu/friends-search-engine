@@ -19,7 +19,11 @@
 
   <div class="container">
     <p>
-      <h2>Search results for [{{query | safe}}]</h2>
+      <h2>Search results for [{{query | safe}}]
+        {% if character != "" %}
+          {{" spoken by [{}]".format(character)}}
+        {% endif %}
+      </h2>
     </p>
 
     <p> 
