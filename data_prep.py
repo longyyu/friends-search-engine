@@ -37,7 +37,7 @@ def get_script_utterance(season_id):
     index = range(get_utterance_count(season)), 
     columns = ['u_id', 'speakers', 'transcript']
   )
-  idx = 0          
+  idx = 0
   for episode in season['episodes']:
     for scene in episode['scenes']:
       for utterance in scene['utterances']:
@@ -119,7 +119,8 @@ def get_script_with_uid(df, u_id, plus_minus = 0, output_format = "terminal"):
       script = f"{u_id} ({row_idx})\n"
     else:
       script = "<span style='background-color: WhiteSmoke;'>" + \
-                pretty_cid(cid) + "</span><br>"
+               "<a href='/script/{}'>{}</a>".format(u_id, pretty_cid(cid)) + \
+               "</span><br>"
 
     for cur_uid in target_uid:
       df_target = df.loc[df.u_id == cur_uid].\
@@ -157,8 +158,8 @@ def get_episode_with_uid(df, uid):
     )
     for row_idx in range(len(df_scene)):
       script += "[{}]  {}{}".format(
-          df_target.loc[row_idx, "speakers"],
-          df_target.loc[row_idx, "transcript"],
+          df_scene.loc[row_idx, "speakers"],
+          df_scene.loc[row_idx, "transcript"],
           sym_newline
         )
     return(script)
