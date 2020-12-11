@@ -5,10 +5,10 @@ import re
 
 # Data Preparation
 #  - Read JSON file as pd.DataFrame, store as TSV
-#  - function definition: get_script_with_u_id
+#  - function definition: get_script_with_uid, get_episode_with_uid
 # Term Project, SI650, F20
 # Author: Yanyu Long, longyyu@umich.edu
-# Updated: Nov 27, 2020
+# Updated: Dec 11, 2020
 
 json_dir = "./data/json/"
 json_file = json_dir + "friends_season_{:02d}.json"
@@ -82,8 +82,8 @@ def pretty_cid(cid):
   )
   return(cid)
 
-# function: get_script_with_u_id ----------------------------------------------
-def get_script_with_u_id(df, u_id, plus_minus = 0, output_format = "terminal"):
+# function: get_script_with_uid ----------------------------------------------
+def get_script_with_uid(df, u_id, plus_minus = 0, output_format = "terminal"):
   #! add header here
   # inputs:
   #   df: 
@@ -110,7 +110,7 @@ def get_script_with_u_id(df, u_id, plus_minus = 0, output_format = "terminal"):
   else:
     cid = pd.Series(u_id).str.extract(r"(.*)_u").loc[0, 0]
     row_idx = df.loc[(df.u_id == u_id)].index.tolist()[0]
-    target_uid = df.loc[range(max(0, row_idx-plus_minus), 
+    target_uid = df.loc[range(max(0, row_idx - plus_minus), 
                               row_idx+plus_minus + 1), 'u_id']
     target_uid = target_uid[target_uid.str.contains(cid)]
 
@@ -140,6 +140,45 @@ def get_script_with_u_id(df, u_id, plus_minus = 0, output_format = "terminal"):
         )
   return(script)
 
+# function: get_episode_with_uid ----------------------------------------------
+def get_episode_with_uid(df, uid):
+  #! add header
+
+  sym_newline = "<br>"
+  def format_scene_script(cid, df_scene):
+    cid_fmt = "{}<span style='background-color: WhiteSmoke; "\
+              "font-size: 18px;'>{}</span>{}{}"
+    script = cid_fmt.format(
+      sym_newline,
+      "Scene {:2d}\n".format(int(
+        re.compile("c(.*)").findall(cid)[0]
+      )),
+      sym_newline, sym_newline
+    )
+    for row_idx in range(len(df_scene)):
+      script += "[{}]  {}{}".format(
+          df_target.loc[row_idx, "speakers"],
+          df_target.loc[row_idx, "transcript"],
+          sym_newline
+        )
+    return(script)
+  
+  # extract episode id from utterance id
+  eid = re.compile("s[0-9]{2}_e[0-9]{2}").findall(uid)[0]
+  # extract all rows of that episode from df
+  df_target = df.loc[df.u_id.str.match(eid), ].reset_index(drop = True)
+  # extract scene id (cid) of all scenes
+  df_target['c_id'] = df_target.u_id.str.extract(r"(.*)_u")
+  cid_list = df_target.c_id.unique()
+  # format and concatenate script from each scene
+  episode = sym_newline.join([
+    format_scene_script(
+      cid, df_target.loc[df_target.c_id == cid].reset_index(drop = True)
+    ) for cid in cid_list
+  ])
+
+  return(episode)
+
 if __name__ == "__main__":
   # print out the character list in descending order of their 
   # total utterances across ten seasons
@@ -148,10 +187,4 @@ if __name__ == "__main__":
       index = "speakers", values = "u_id", aggfunc = "count"
     ).sort_values(by = "u_id", ascending = False).\
       head(15).index.tolist()
-  )
-  # print the content of the s01_e01
-  print(
-    len(script_utterance.loc[
-      script_utterance.u_id.str.match("s01_e01"), 
-    ])
   )
