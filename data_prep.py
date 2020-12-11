@@ -16,7 +16,14 @@ output_dir = "./data/"
 
 # Data preparation ------------------------------------------------------------
 def get_script_utterance(season_id):
+  # read script data from json files and store as pd.DataFrame object
+  # input - season_id: an integer
+
   def get_utterance_count(season):
+    # a helper function that returns the number of utterances in a season
+    # this is used to specify number of rows in data frame df_all_transcript 
+    # to avoid appending rows, which will expedite the outer function
+    # input - season: json format data
     num_utterances = 0
     for episode in season['episodes']:
       for scene in episode['scenes']:
@@ -25,10 +32,10 @@ def get_script_utterance(season_id):
             num_utterances += 1
     return(num_utterances)
     
-  season = json.load(open(json_file.format(season_id)))    
+  season = json.load(open(json_file.format(season_id)))
   df_all_transcript = pd.DataFrame(
-    index=range(get_utterance_count(season)), 
-    columns=['u_id', 'speakers', 'transcript']
+    index = range(get_utterance_count(season)), 
+    columns = ['u_id', 'speakers', 'transcript']
   )
   idx = 0          
   for episode in season['episodes']:
@@ -43,7 +50,14 @@ def get_script_utterance(season_id):
           idx += 1
   return(df_all_transcript)
 
-if not os.path.exists(f"{output_dir}script_id_speaker_10seasons.tsv"):
+# if the TSV format data already exists on disk, then read from TSV
+# otherwise read from JSON format data and store as TSV
+if os.path.exists(f"{output_dir}script_id_speaker_10seasons.tsv"):
+  script_utterance = pd.read_csv(
+    f"{output_dir}script_id_speaker_10seasons.tsv",
+    sep = '\t', header = 0
+  )
+else:
   script_utterance = pd.DataFrame(columns=['u_id', 'speakers', 'transcript'])
   for season_id in range(1, 11):
     script_utterance = script_utterance.append(
@@ -54,14 +68,11 @@ if not os.path.exists(f"{output_dir}script_id_speaker_10seasons.tsv"):
     f"{output_dir}script_id_speaker_10seasons.tsv",
     sep = '\t', index = False
   )
-else:
-  script_utterance = pd.read_csv(
-    f"{output_dir}script_id_speaker_10seasons.tsv",
-    sep = '\t', header = 0
-  )
 
 # function: pretty_cid --------------------------------------------------------
 def pretty_cid(cid):
+  # a helper function that prints scene id (cid) in a nice format
+  # input - cid: a string in the format of "s01_e01_c01"
   cid = re.sub("_", " ",
     re.sub("C", "Scene", 
       re.sub("E", "Episode", 
@@ -74,7 +85,10 @@ def pretty_cid(cid):
 # function: get_script_with_u_id ----------------------------------------------
 def get_script_with_u_id(df, u_id, plus_minus = 0, output_format = "terminal"):
   #! add header here
-  #! might add output_format = ["terminal", "html"]
+  # inputs:
+  #   df: 
+  #   ... 
+  #   output_format: one of ["terminal", "html"]
   if output_format == "terminal":
     sym_newline = "\n"
     sym_red = "\x1b[1;31;47m"
