@@ -15,10 +15,10 @@ Visit the Friends search engine [web app](http://longyyu.pythonanywhere.com/).
 
 The baseline model adopts a BM25 ranker implemented using `metapy`.  
 The following files and directories are for the metapy baseline model:  
-*  friends/
 *  config_metapy.py
-*  friends-config.toml
-*  lemur-stopwords.txt
+*  ./data/friends/
+*  ./data/friends-config.toml
+*  ./data/lemur-stopwords.txt
   
 ## My own ranking function  
 
