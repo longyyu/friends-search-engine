@@ -6,7 +6,7 @@ from metapy import metapy
 #  - function definition: get_retrieval_results
 # Term Project, SI650, F20
 # Author: Yanyu Long, longyyu@umich.edu
-# Updated: Dec 11, 2020
+# Updated: Dec 12, 2020
 
 # create config file ----------------------------------------------------------
 config_file = "./data/friends-config.toml"
@@ -86,48 +86,51 @@ if __name__ == "__main__":
   # for u_id in result_list:
   #    print(get_script_with_uid(script_utterance, u_id, 1))
 
-  # generate qrels ------------------------------
-  query_list = []
-  query_result = pd.DataFrame()
-  with open("./data/friends-queries.txt") as f:
-    for q_id, query in enumerate(f):
-      query_list.append(query.strip())
-      query_result = query_result.append(
-        pd.DataFrame(dict(
-          query_id = q_id, 
-          result_id = get_retrieval_results(
-            query, ranker, inv_idx, script_utterance, 
-            num_results = 10,
-            return_type = "row_idx"
-          )
-        )), 
-        ignore_index = True
-      )
-    f.close()
-  print(query_result)
-  query_result.to_csv("./data/friends-qrels-blank.txt", sep = " ",
-                      index = False)
-  
-  # # baseline model evaluation ------------------------
-  # df_baseline_eval = pd.DataFrame(
-  #     index = pd.Index(list(range(1, 11)) + ["Mean"]), 
-  #     columns = ["AP", "NDCG"]
-  # )
-  # ev = metapy.index.IREval(config_file)
-  # num_results = 10
+  # # generate qrels ------------------------------
+  # query_list = []
+  # query_result = pd.DataFrame()
   # with open("./data/friends-queries.txt") as f:
-  #   for query_num, line in enumerate(f):
-  #     query = metapy.index.Document()
-  #     query.content(line.strip())
-  #     results = ranker.score(inv_idx, query, num_results)     
-
-  #     df_baseline_eval.iloc[query_num] = dict(
-  #       AP = ev.avg_p(results, query_num, num_results), 
-  #       NDCG = ev.ndcg(results, query_num, num_results)
+  #   for q_id, query in enumerate(f):
+  #     query_list.append(query.strip())
+  #     query_result = query_result.append(
+  #       pd.DataFrame(dict(
+  #         query_id = q_id, 
+  #         result_id = get_retrieval_results(
+  #           query, ranker, inv_idx, script_utterance, 
+  #           num_results = 10,
+  #           return_type = "row_idx"
+  #         )
+  #       )), 
+  #       ignore_index = True
   #     )
   #   f.close()
-  # # calculate average AP and NDCG
-  # df_baseline_eval.iloc[10] = dict(
-  #   AP = ev.map(), NDCG = df_baseline_eval.NDCG.mean()
-  # )
-  # print(df_baseline_eval)
+  # print(query_result)
+  # query_result.to_csv("./data/friends-qrels-blank.txt", sep = " ",
+  #                     header = False, index = False)
+  
+  # baseline model evaluation ------------------------
+  with open("./data/friends-queries.txt") as f:
+    query_list = [line.strip() for line in f]
+    f.close()
+  num_testing_queries = len(query_list)  
+  df_baseline_eval = pd.DataFrame(
+      index = pd.Index(list(range(num_testing_queries)) + ["Mean"]), 
+      columns = ["AP", "NDCG"]
+  )
+
+  ev = metapy.index.IREval(config_file)
+  num_results = 10
+  for query_num, query_content in enumerate(query_list):
+    query = metapy.index.Document()
+    query.content(query_content)
+    results = ranker.score(inv_idx, query, num_results)     
+
+    df_baseline_eval.iloc[query_num] = dict(
+      AP = ev.avg_p(results, query_num, num_results), 
+      NDCG = ev.ndcg(results, query_num, num_results)
+    )
+  # calculate average AP and NDCG
+  df_baseline_eval.iloc[num_testing_queries] = dict(
+    AP = ev.map(), NDCG = df_baseline_eval.NDCG.mean()
+  )
+  print(df_baseline_eval)
