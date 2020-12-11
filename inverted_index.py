@@ -160,9 +160,20 @@ class Indexes:
         score_doc[i] += self.bm25_score_term_doc(term, doc_id) #! might want to specify k1 and b
     return(score_doc)
 
-def get_retrieval_results(query, query_doc_id, num_results = 10):
+def get_retrieval_results(query, filter_by_character = "", num_results = 10):
+  # filter documents to be queried
+  if filter_by_character == "":
+    query_doc_id = indexes.doc_id
+  else:
+    query_doc_id = script_utterance_tmp.loc[ #! update to all docs
+      script_utterance_tmp.speakers == filter_by_character, "u_id"
+    ].tolist()
+
+  # rank the documents
   doc_score =  indexes.bm25_score(query = query, doc_id_list = query_doc_id)
-  doc_score_df = pd.DataFrame(dict(doc_id = query_doc_id,score = doc_score)).\
+
+  # organize the ranking results
+  doc_score_df = pd.DataFrame(dict(doc_id = query_doc_id, score = doc_score)).\
     sort_values(by = "score", ascending = False).\
     reset_index(drop = True)
   return(doc_score_df.loc[0:(num_results - 1), 'doc_id'].tolist())
@@ -175,8 +186,9 @@ with open('./lemur-stopwords.txt', 'r',
   f.close()
 
 # set up documents and doc_id
-documents = script_utterance.transcript.tolist()[:4001] #! update to all docs
-doc_id = script_utterance.u_id.tolist()[:4001] #! update to all docs
+script_utterance_tmp = script_utterance.iloc[:4001, ] #! update to all docs
+documents = script_utterance_tmp.transcript.tolist() #! update to all docs
+doc_id = script_utterance_tmp.u_id.tolist() #! update to all docs
 
 # build inverted index
 indexes = Indexes(
@@ -187,6 +199,7 @@ indexes = Indexes(
 )
 
 if __name__ == "__main__":
-  query_doc_id = doc_id
-  # query_doc_id = ['s01_e10_c02_u033', 's01_e10_c02_u042', 's01_e01_c01_u001']
-  print(get_retrieval_results(query = "you're going out with the guy", query_doc_id = query_doc_id))
+  print(get_retrieval_results(
+    query = "you're going out with the guy",
+    filter_by_character = "Joey Tribbiani"
+  ))
