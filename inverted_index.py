@@ -156,7 +156,7 @@ def get_retrieval_results(query, filter_by_character = "", num_results = 10):
 
 # -----------------------------------------------------------------------------
 # import stop words
-with open('./lemur-stopwords.txt', 'r',
+with open('./data/lemur-stopwords.txt', 'r',
           encoding = "UTF-8") as f:
   stop_words = [line.strip() for line in f]
   f.close()
