@@ -8,7 +8,7 @@ from datetime import datetime
 import os
 #from metapy import metapy
 #from config_metapy import config_file, inv_idx, get_retrieval_results
-from data_prep import script_utterance, get_script_with_u_id
+from data_prep import script_utterance, get_script_with_uid
 from inverted_index import indexes, get_retrieval_results
 
 # Purpose: This script #! add header
@@ -70,7 +70,7 @@ def search_results(query, character):
   result_list = get_retrieval_results(
     query = query, filter_by_character = character
   )
-  docs = [get_script_with_u_id(
+  docs = [get_script_with_uid(
             df = script_utterance, 
             u_id = u_id, 
             plus_minus = 1,
