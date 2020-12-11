@@ -6,7 +6,7 @@ import numpy as np
 import math
 import os
 
-from helper_func import *
+from helper_func import measure_time, read_dict, save_dict
 from data_prep import script_utterance
 
 # Purpose: This script #! add header
