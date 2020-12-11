@@ -10,7 +10,7 @@ import os
 #from metapy import metapy
 #from config_metapy import config_file, inv_idx, get_retrieval_results
 from data_prep import script_utterance, get_script_with_uid, \
-                      get_episode_with_uid
+                      get_episode_with_uid, character_list
 from inverted_index import indexes, get_retrieval_results
 
 # Purpose: This script #! add header
@@ -23,13 +23,8 @@ Bootstrap(app)
 
 class SearchForm(FlaskForm):
   character = SelectField("Filter by character", 
-    choices = [("", "Select a character"), 
-                ("Chandler Bing", "Chandler"), 
-                ("Joey Tribbiani", "Joey"), 
-                ("Monica Geller", "Monica"),
-                ("Phoebe Buffay", "Phoebe"), 
-                ("Rachel Green", "Rachel"), 
-                ("Ross Geller", "Ross")]
+    choices = [("", "Select a character")] + \
+      [(name, name) for name in character_list[:20]]
   )
   user_query = StringField(
     validators = [DataRequired()],
