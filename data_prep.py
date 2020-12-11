@@ -180,12 +180,18 @@ def get_episode_with_uid(df, uid):
 
   return(episode)
 
+# generate a list of characters sorted in descending order of 
+# total utterances across all ten seasons
+character_list = script_utterance.pivot_table(
+    index = "speakers", values = "u_id", aggfunc = "count"
+  ).sort_values(by = "u_id", ascending = False)\
+    .index.tolist()
+character_list.remove("#ALL#")
+
 if __name__ == "__main__":
   # print out the character list in descending order of their 
   # total utterances across ten seasons
   print(
-    script_utterance.pivot_table(
-      index = "speakers", values = "u_id", aggfunc = "count"
-    ).sort_values(by = "u_id", ascending = False).\
-      head(15).index.tolist()
+    [("", "Select a character")] + \
+      [(name, name.split(" ")[0]) for name in character_list[:20]]
   )
