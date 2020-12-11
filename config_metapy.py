@@ -86,7 +86,7 @@ if __name__ == "__main__":
   ranker =  metapy.index.OkapiBM25(k1 = 1.2, b = 0.75, k3 = 500)
   ev = metapy.index.IREval(config_file)
   num_results = 10
-  with open("./data/friends_queries.txt") as f:
+  with open("./data/friends-queries.txt") as f:
     for query_num, line in enumerate(f):
       query = metapy.index.Document()
       query.content(line.strip())
@@ -108,7 +108,7 @@ if __name__ == "__main__":
 
   # query_list = []
   # query_result = pd.DataFrame()
-  # with open("./data/friends_queries.txt") as f:
+  # with open("./data/friends-queries.txt") as f:
   #    for q_id, query in enumerate(f):
   #       query_list.append(query.strip())
   #       query_result = query_result.append(
