@@ -5,7 +5,7 @@ import re
 
 # Data Preparation
 #  - fead JSON file as pd.DataFrame, store as TSV
-#  - read testing queries' annotations (query_relevance)
+#  - read testing query list (query_list) and annotations (query_relevance)
 #  - function definition: get_script_with_uid, get_episode_with_uid
 # Term Project, SI650, F20
 # Author: Yanyu Long, longyyu@umich.edu
@@ -70,7 +70,11 @@ else:
     sep = '\t', index = False
   )
 
-# read in query judgement data ------------------------------------------------
+# read in query list and query judgement data ---------------------------------
+with open("./data/friends-queries.txt") as f:
+    query_list = [line.strip() for line in f]
+    f.close()
+
 query_relevance = pd.read_csv(
   "./data/friends-qrels.txt", 
   sep = " ", header = None, 
