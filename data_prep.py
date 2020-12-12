@@ -4,7 +4,8 @@ import pandas as pd
 import re
 
 # Data Preparation
-#  - Read JSON file as pd.DataFrame, store as TSV
+#  - fead JSON file as pd.DataFrame, store as TSV
+#  - read testing queries' annotations (query_relevance)
 #  - function definition: get_script_with_uid, get_episode_with_uid
 # Term Project, SI650, F20
 # Author: Yanyu Long, longyyu@umich.edu
@@ -68,6 +69,13 @@ else:
     f"{output_dir}script_id_speaker_10seasons.tsv",
     sep = '\t', index = False
   )
+
+# read in query judgement data ------------------------------------------------
+query_relevance = pd.read_csv(
+  "./data/friends-qrels.txt", 
+  sep = " ", header = None, 
+  names = ["query_id", "doc_id", "relevance"]
+)
 
 # function: pretty_cid --------------------------------------------------------
 def pretty_cid(cid):
