@@ -1,5 +1,9 @@
 import os
 from metapy import metapy
+import math
+import numpy as np
+
+from data_prep import script_utterance, query_list, query_relevance
 
 # Metapy Settings
 #  - Creating config files, DAT files, inv_idx
@@ -39,7 +43,6 @@ else:
   print(f"{config_file} already exists.")
 
 # Create .dat file ------------------------------------------------------------
-from data_prep import script_utterance
 output_dir = "./data/friends/"
 
 if not os.path.exists(f"{output_dir}friends.dat"):
@@ -87,50 +90,106 @@ if __name__ == "__main__":
   #    print(get_script_with_uid(script_utterance, u_id, 1))
 
   # # generate qrels ------------------------------
-  # query_list = []
   # query_result = pd.DataFrame()
-  # with open("./data/friends-queries.txt") as f:
-  #   for q_id, query in enumerate(f):
-  #     query_list.append(query.strip())
-  #     query_result = query_result.append(
-  #       pd.DataFrame(dict(
-  #         query_id = q_id, 
-  #         result_id = get_retrieval_results(
-  #           query, ranker, inv_idx, script_utterance, 
-  #           num_results = 10,
-  #           return_type = "row_idx"
-  #         )
-  #       )), 
-  #       ignore_index = True
-  #     )
-  #   f.close()
-  # print(query_result)
+  # for q_id, query in enumerate(query_list):
+  #   query_result = query_result.append(
+  #     pd.DataFrame(dict(
+  #       query_id = q_id, 
+  #       result_id = get_retrieval_results(
+  #         query, ranker, inv_idx, script_utterance, 
+  #         num_results = 20,
+  #         return_type = "row_idx"
+  #       )
+  #     )), 
+  #     ignore_index = True
+  #   )
+  # # query_result['transcript'] = script_utterance.iloc[query_result.result_id]\
+  # #   ['transcript'].tolist()
+  # print(query_result.loc[query_result.query_id == 0])
   # query_result.to_csv("./data/friends-qrels-blank.txt", sep = " ",
   #                     header = False, index = False)
   
-  # baseline model evaluation ------------------------
-  with open("./data/friends-queries.txt") as f:
-    query_list = [line.strip() for line in f]
-    f.close()
-  num_testing_queries = len(query_list)  
-  df_baseline_eval = pd.DataFrame(
-      index = pd.Index(list(range(num_testing_queries)) + ["Mean"]), 
-      columns = ["AP", "NDCG"]
-  )
+  # # baseline model evaluation ------------------------
+  # num_testing_queries = len(query_list)  
+  # df_baseline_eval = pd.DataFrame(
+  #     index = pd.Index(list(range(num_testing_queries)) + ["Mean"]), 
+  #     columns = ["AP", "NDCG"]
+  # )
 
-  ev = metapy.index.IREval(config_file)
-  num_results = 10
-  for query_num, query_content in enumerate(query_list):
-    query = metapy.index.Document()
-    query.content(query_content)
-    results = ranker.score(inv_idx, query, num_results)     
+  # ev = metapy.index.IREval(config_file)
+  # num_results = 10
+  # for query_num, query_content in enumerate(query_list):
+  #   query = metapy.index.Document()
+  #   query.content(query_content)
+  #   results = ranker.score(inv_idx, query, num_results)     
 
-    df_baseline_eval.iloc[query_num] = dict(
-      AP = ev.avg_p(results, query_num, num_results), 
-      NDCG = ev.ndcg(results, query_num, num_results)
+  #   df_baseline_eval.iloc[query_num] = dict(
+  #     AP = ev.avg_p(results, query_num, num_results), 
+  #     NDCG = ev.ndcg(results, query_num, num_results)
+  #   )
+  # # calculate average AP and NDCG
+  # df_baseline_eval.iloc[num_testing_queries] = dict(
+  #   AP = ev.map(), NDCG = df_baseline_eval.NDCG.mean()
+  # )
+  # print(df_baseline_eval)
+
+  # write my own evaluation function ------------------------------------------
+  #! todo: test my own model
+
+  # generate retrieval result using baseline model
+  query_result = pd.DataFrame()
+  for q_id, query in enumerate(query_list):
+    query_result = query_result.append(
+      pd.DataFrame(dict(
+        query_id = q_id, 
+        doc_id = get_retrieval_results(
+          query, ranker, inv_idx, script_utterance, 
+          num_results = 10,
+          return_type = "row_idx"
+        )
+      )), 
+      ignore_index = True
     )
-  # calculate average AP and NDCG
-  df_baseline_eval.iloc[num_testing_queries] = dict(
-    AP = ev.map(), NDCG = df_baseline_eval.NDCG.mean()
+  
+  # merge with query_relevance for get relevance score
+  query_result = query_result.merge(
+    query_relevance, how = "left", on = ["query_id", "doc_id"]
   )
-  print(df_baseline_eval)
+  # fill missing values (query-doc pairs that were not annotated) with zero
+  query_result = query_result.fillna({'relevance': 0})
+
+  def calc_avg_precision(df):
+    # input - df, pd.DataFrame with a column "relevance" and index being 
+    #         <the no. of retrieved documents> - 1
+    df = df.assign(
+      relevance_binary = [1 if val > 0 else 0 for val in df.relevance])
+    # calculate average precision
+    df = df.loc[df.relevance_binary == 1]
+    df = df.assign(
+      precision = range(1, len(df) + 1) / (df.index + 1)
+    )
+    return(df.precision.mean())
+
+  def calc_dcg(relevance_score):
+    # input - relevance_score: a list of double
+    return(
+      np.sum([rel if i == 0 else (rel / math.log(i + 1, 2)) \
+              for i, rel in enumerate(relevance_score)])
+    )
+    
+  def calc_ndcg(df):
+    # input - df, pd.DataFrame with a column "relevance" and index being 
+    #         <the no. of retrieved documents> - 1
+    dcg = calc_dcg(df.relevance)
+    idcg = calc_dcg(df.relevance.sort_values(ascending = False))
+    return(dcg / idcg)
+
+
+  ap_list = [calc_avg_precision(
+    query_result.loc[query_result.query_id == q_id].reset_index(drop = True))
+    for q_id in range(len(query_list))]
+  print(ap_list)
+  
+  ndcg_list = [calc_ndcg(query_result.loc[query_result.query_id == q_id]) \
+    for q_id in range(len(query_list))]
+  print(ndcg_list)
