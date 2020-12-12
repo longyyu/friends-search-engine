@@ -8,7 +8,7 @@ import re
 #  - function definition: get_script_with_uid, get_episode_with_uid
 # Term Project, SI650, F20
 # Author: Yanyu Long, longyyu@umich.edu
-# Updated: Dec 11, 2020
+# Updated: Dec 12, 2020
 
 json_dir = "./data/json/"
 json_file = json_dir + "friends_season_{:02d}.json"
@@ -97,11 +97,12 @@ def get_script_with_uid(df, u_id, plus_minus = 0, output_format = "terminal"):
     sym_newline = "<br>"
     sym_red = "<span style='color:IndianRed'>"
     sym_normal = "</span>"
-    
+  
   if plus_minus <= 0:
-    df_target = df.loc[df.u_id == u_id].reset_index(drop = True)
-    script = "Episode: {}{}[{}] {}{}".format(
-      df_target.u_id.str.extract(r"(.*)_c").loc[0, 0],
+    df_target = df.loc[df.u_id == u_id].reset_index()
+    script = "{} ({}){}[{}] {}{}".format(
+      u_id,
+      df_target.loc[0, "index"],
       sym_newline,
       df_target.loc[0, "speakers"],
       df_target.loc[0, "transcript"],
@@ -110,9 +111,10 @@ def get_script_with_uid(df, u_id, plus_minus = 0, output_format = "terminal"):
   else:
     cid = pd.Series(u_id).str.extract(r"(.*)_u").loc[0, 0]
     row_idx = df.loc[(df.u_id == u_id)].index.tolist()[0]
-    target_uid = df.loc[range(max(0, row_idx - plus_minus), 
-                              row_idx+plus_minus + 1), 'u_id']
-    target_uid = target_uid[target_uid.str.contains(cid)]
+    df_target = df.loc[range(max(0, row_idx - plus_minus), 
+                             row_idx+plus_minus + 1)]
+    df_target = df_target.loc[df_target.u_id.str.contains(cid)]\
+                         .reset_index(drop = True)
 
     # initialize script with utterance/scene ID
     if output_format == "terminal":
@@ -122,21 +124,21 @@ def get_script_with_uid(df, u_id, plus_minus = 0, output_format = "terminal"):
                "<a href='/script/{}'>{}</a>".format(u_id, pretty_cid(cid)) + \
                "</span><br>"
 
-    for cur_uid in target_uid:
-      df_target = df.loc[df.u_id == cur_uid].\
-        reset_index(drop = True)
-      if cur_uid == u_id:
+    # for cur_uid in target_uid:
+    for i in range(len(df_target)):
+      if df_target.loc[i, "u_id"] == u_id: 
+        # highlight the target utterance in red
         script += "{}[{}] {}{}{}".format(
           sym_red,
-          df_target.loc[0, "speakers"],
-          df_target.loc[0, "transcript"],
+          df_target.loc[i, "speakers"],
+          df_target.loc[i, "transcript"],
           sym_normal,
           sym_newline
         )
-      elif len(df_target) > 0:
+      else:
         script += "[{}] {}{}".format(
-          df_target.loc[0, "speakers"],
-          df_target.loc[0, "transcript"],
+          df_target.loc[i, "speakers"],
+          df_target.loc[i, "transcript"],
           sym_newline
         )
   return(script)
