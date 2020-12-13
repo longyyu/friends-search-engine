@@ -9,9 +9,11 @@ import os
 from helper_func import measure_time, read_dict, save_dict
 from data_prep import script_utterance
 
-# Purpose: This script #! add header
+# Purpose: This script defines class Indexes, which is used to tokenize 
+#          documents, generate inverted index, and rank documents given
+#          a query.
 # Author: Yanyu Long
-# Updated: Dec 11, 2020
+# Updated: Dec 13, 2020
 
 class Indexes:
   def __init__(self, documents, stop_words, doc_id = None, stem = False):
@@ -39,6 +41,9 @@ class Indexes:
     # self.doc_freq: a dictionary that maps term to its document frequency
     self.doc_freq = None
     self.compute_doc_freq()
+
+    # self.ranker_map: a dictionary that maps string to a ranking function
+    self.ranker_map = dict(bm25 = self.bm25_score_term_doc)
 
   def tokenize(self, document, remove_stop_words = False):
     # tokenize the given document
@@ -122,9 +127,17 @@ class Indexes:
                 self.avg_doc_length) + tf_term_doc))
     return(score_idf * score_tf)
   
-  def bm25_score(self, query, doc_id_list = None, k1 = 1.25, b = 0.75):
-    #! change `bm25_score` to general scoring
-    #! add a map from string to ranking functions
+  def rank_doc(self, query, ranker, doc_id_list = None, **kwargs):
+    # inputs:
+    #   query: a string
+    #   ranker: a string that can be mapped to a ranking function
+    #   doc_id_list: an iterable object containing the IDs of documents
+    #                to be ranked
+    #   **kwargs: parameters to be passed into the ranking function
+    # output: the scores for each document specified by the doc_id_list (or 
+    #         all documents if doc_id_list is None)
+
+    ranking_func = self.ranker_map[ranker]
     query_tokens = self.tokenize(query, remove_stop_words = True)
     if doc_id_list is None: 
       # if the user did not specify doc_id_list, will go through all documents
@@ -133,7 +146,8 @@ class Indexes:
     for i, doc_id in enumerate(doc_id_list):
       common_tokens = set(query_tokens) & set(self.doc_tokens[doc_id])
       for term in common_tokens:
-        score_doc[i] += self.bm25_score_term_doc(term, doc_id) #! might want to specify k1 and b
+        score_doc[i] += ranking_func(term, doc_id, **kwargs)
+    print(score_doc[:10])
     return(score_doc)
 
 def get_retrieval_results(query, filter_by_character = "", num_results = 10):
@@ -146,7 +160,10 @@ def get_retrieval_results(query, filter_by_character = "", num_results = 10):
     ].tolist()
 
   # rank the documents
-  doc_score =  indexes.bm25_score(query = query, doc_id_list = query_doc_id)
+  doc_score =  indexes.rank_doc(
+    query = query, ranker = "bm25", doc_id_list = query_doc_id,
+    k1 = 1.25, b = 0.75
+  )
 
   # organize the ranking results
   doc_score_df = pd.DataFrame(dict(doc_id = query_doc_id, score = doc_score)).\
