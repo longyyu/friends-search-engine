@@ -13,7 +13,7 @@ from data_prep import script_utterance
 #          documents, generate inverted index, and rank documents given
 #          a query.
 # Author: Yanyu Long
-# Updated: Dec 13, 2020
+# Updated: Dec 14, 2020
 
 class Indexes:
   def __init__(self, documents, stop_words, doc_id = None, stem = False):
@@ -142,13 +142,12 @@ class Indexes:
     if doc_id_list is None: 
       # if the user did not specify doc_id_list, will go through all documents
       doc_id_list = self.doc_id
-    score_doc = [0] * len(doc_id_list)
+    doc_score = [0] * len(doc_id_list)
     for i, doc_id in enumerate(doc_id_list):
       common_tokens = set(query_tokens) & set(self.doc_tokens[doc_id])
       for term in common_tokens:
-        score_doc[i] += ranking_func(term, doc_id, **kwargs)
-    print(score_doc[:10])
-    return(score_doc)
+        doc_score[i] += ranking_func(term, doc_id, **kwargs)
+    return(doc_score)
 
 def get_retrieval_results(query, filter_by_character = "", num_results = 10):
   # filter documents to be queried
@@ -166,10 +165,15 @@ def get_retrieval_results(query, filter_by_character = "", num_results = 10):
   )
 
   # organize the ranking results
-  doc_score_df = pd.DataFrame(dict(doc_id = query_doc_id, score = doc_score)).\
-    sort_values(by = "score", ascending = False).\
-    reset_index(drop = True)
-  return(doc_score_df.loc[0:(num_results - 1), 'doc_id'].tolist())
+  doc_score_df = pd.DataFrame(dict(doc_id = query_doc_id, score = doc_score))\
+    .sort_values(by = "score", ascending = False)\
+    .reset_index(drop = True)
+  # keep only the documents with a positive score
+  doc_score_df = doc_score_df.loc[doc_score_df.score > 0]
+  if num_results is not None:
+    doc_score_df = doc_score_df.loc[0:(num_results - 1)]
+  
+  return(doc_score_df.doc_id.tolist())
 
 # -----------------------------------------------------------------------------
 # import stop words
@@ -194,5 +198,7 @@ indexes = Indexes(
 if __name__ == "__main__":
   print(get_retrieval_results(
     query = "you're going out with the guy",
-    filter_by_character = "Joey Tribbiani"
+    # query = "Rosita the chair",
+    # filter_by_character = "Joey Tribbiani",
+    # num_results = None
   ))
