@@ -1,9 +1,7 @@
 import os
 from metapy import metapy
-import math
-import numpy as np
 
-from data_prep import script_utterance, query_list, query_relevance
+from data_prep import script_utterance, query_list
 from ranker_evaluation import evaluate_query_result
 
 # Metapy Settings
