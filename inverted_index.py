@@ -11,7 +11,8 @@ from data_prep import script_utterance
 
 # Purpose: This script defines class Indexes, which is used to tokenize 
 #          documents, generate inverted index, and rank documents given
-#          a query.
+#          a query. It also defines a get_retrieval_results function 
+#          based on the Indexes class. 
 # Author: Yanyu Long
 # Updated: Dec 14, 2020
 
@@ -23,21 +24,23 @@ class Indexes:
     self.doc_count = len(documents)
     self.doc_id = range(0, self.doc_count) if doc_id is None else doc_id
     self.doc_length = dict(zip(self.doc_id, [len(doc) for doc in documents]))
-    self.avg_doc_length = np.mean(list(self.doc_length.values()))
-    
+    self.avg_doc_length = np.mean(list(self.doc_length.values()))    
     # self.doc_tokens: a dictionary that maps a document's ID to its tokens
     self.doc_tokens = read_dict("./data/doc_tokens.pkl") \
       if os.path.exists("./data/doc_tokens.pkl") else None
     if self.doc_tokens is None:
       self.tokenize_all_documents()
     
+    self.corpus_freq = dict() # a dictionary that maps a term to its total 
+                              # frequency in the corpus (i.e. all documents)
+    self.compute_corpus_freq() # initialize corpus frequency
+    
     # self.term_to_freq_pos: a dictionary that maps a tuple of (doc_id, term)
     # to a list of [term frequency (an integer), position (a integer list)]
     self.term_to_freq_pos = read_dict("./data/term_to_freq_pos.pkl") \
       if os.path.exists("./data/term_to_freq_pos.pkl") else None
     if self.term_to_freq_pos is None:
-      self.generate_inverted_index()
-    
+      self.generate_inverted_index()    
     # self.doc_freq: a dictionary that maps term to its document frequency
     self.doc_freq = None
     self.compute_doc_freq()
@@ -69,11 +72,21 @@ class Indexes:
     # update self.doc_tokens and save to disk
     self.doc_tokens = dict(zip(self.doc_id, doc_tokens_list))
     save_dict(self.doc_tokens, "./data/doc_tokens.pkl")
+  
+  @measure_time
+  def compute_corpus_freq(self):
+    for doc_id in self.doc_id:
+      for term in self.doc_tokens[doc_id]:
+        if term in self.stop_list:
+          continue
+        if term not in self.corpus_freq:
+          self.corpus_freq[term] = 0
+        self.corpus_freq[term] += 1
 
   @measure_time
   def generate_inverted_index(self):
     self.term_to_freq_pos = dict()
-    for idx, doc_id in enumerate(self.documents):
+    for idx, doc_id in enumerate(self.doc_id):
       # print processing status every 2000 documents
       if idx % 2000 == 0:
         print("    Processing document # {:5d} (doc_id = {}) ...".\
@@ -83,15 +96,15 @@ class Indexes:
       for pos, term in enumerate(self.doc_tokens[doc_id]):
         if term in self.stop_list:
           continue
+        # update document frequency and position for current term
         if (doc_id, term) not in self.term_to_freq_pos:
-          self.term_to_freq_pos[(doc_id, term)] = [0, []]
-        # update freq and pos for current term
+          self.term_to_freq_pos[(doc_id, term)] = [0, []] 
         self.term_to_freq_pos[(doc_id, term)][0] += 1
         self.term_to_freq_pos[(doc_id, term)][1].append(pos)
     
     # save self.term_to_freq_pos and self.doc_freq to disk
     save_dict(self.term_to_freq_pos, "./data/term_to_freq_pos.pkl")
-      
+
   @measure_time
   def compute_doc_freq(self):
     # turn the posting into a data.frame
