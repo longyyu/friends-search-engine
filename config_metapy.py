@@ -4,13 +4,14 @@ import math
 import numpy as np
 
 from data_prep import script_utterance, query_list, query_relevance
+from ranker_evaluation import evaluate_query_result
 
 # Metapy Settings
 #  - Creating config files, DAT files, inv_idx
 #  - function definition: get_retrieval_results
 # Term Project, SI650, F20
 # Author: Yanyu Long, longyyu@umich.edu
-# Updated: Dec 12, 2020
+# Updated: Dec 13, 2020
 
 # create config file ----------------------------------------------------------
 config_file = "./data/friends-config.toml"
@@ -109,7 +110,7 @@ if __name__ == "__main__":
   # query_result.to_csv("./data/friends-qrels-blank.txt", sep = " ",
   #                     header = False, index = False)
   
-  # # baseline model evaluation ------------------------
+  # # baseline model evaluation using metapy's IREval -------------------------
   # num_testing_queries = len(query_list)  
   # df_baseline_eval = pd.DataFrame(
   #     index = pd.Index(list(range(num_testing_queries)) + ["Mean"]), 
@@ -133,10 +134,9 @@ if __name__ == "__main__":
   # )
   # print(df_baseline_eval)
 
-  # write my own evaluation function ------------------------------------------
-  #! todo: test my own model
-
-  # generate retrieval result using baseline model
+  # evaluate the baseline model ---------------------------------------------
+  # retrieve documents using the baseline model
+  NUM_RESULT = 10
   query_result = pd.DataFrame()
   for q_id, query in enumerate(query_list):
     query_result = query_result.append(
@@ -144,52 +144,13 @@ if __name__ == "__main__":
         query_id = q_id, 
         doc_id = get_retrieval_results(
           query, ranker, inv_idx, script_utterance, 
-          num_results = 10,
+          num_results = NUM_RESULT,
           return_type = "row_idx"
         )
       )), 
       ignore_index = True
     )
-  
-  # merge with query_relevance for get relevance score
-  query_result = query_result.merge(
-    query_relevance, how = "left", on = ["query_id", "doc_id"]
-  )
-  # fill missing values (query-doc pairs that were not annotated) with zero
-  query_result = query_result.fillna({'relevance': 0})
-
-  def calc_avg_precision(df):
-    # input - df, pd.DataFrame with a column "relevance" and index being 
-    #         <the no. of retrieved documents> - 1
-    df = df.assign(
-      relevance_binary = [1 if val > 0 else 0 for val in df.relevance])
-    # calculate average precision
-    df = df.loc[df.relevance_binary == 1]
-    df = df.assign(
-      precision = range(1, len(df) + 1) / (df.index + 1)
-    )
-    return(df.precision.mean())
-
-  def calc_dcg(relevance_score):
-    # input - relevance_score: a list of double
-    return(
-      np.sum([rel if i == 0 else (rel / math.log(i + 1, 2)) \
-              for i, rel in enumerate(relevance_score)])
-    )
-    
-  def calc_ndcg(df):
-    # input - df, pd.DataFrame with a column "relevance" and index being 
-    #         <the no. of retrieved documents> - 1
-    dcg = calc_dcg(df.relevance)
-    idcg = calc_dcg(df.relevance.sort_values(ascending = False))
-    return(dcg / idcg)
-
-
-  ap_list = [calc_avg_precision(
-    query_result.loc[query_result.query_id == q_id].reset_index(drop = True))
-    for q_id in range(len(query_list))]
-  print(ap_list)
-  
-  ndcg_list = [calc_ndcg(query_result.loc[query_result.query_id == q_id]) \
-    for q_id in range(len(query_list))]
-  print(ndcg_list)
+  # evaluate ranker performance
+  baseline_eval = evaluate_query_result(query_result)
+  print(baseline_eval)
+  print(baseline_eval[["ap", "ndcg"]].mean())
