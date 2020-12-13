@@ -46,7 +46,9 @@ class Indexes:
     self.compute_doc_freq()
 
     # self.ranker_map: a dictionary that maps string to a ranking function
-    self.ranker_map = dict(bm25 = self.bm25_score_term_doc)
+    self.ranker_map = dict(
+      bm25 = self.bm25_score, bm25_v1 = self.bm25_v1_score
+    )
 
   def tokenize(self, document, remove_stop_words = False):
     # tokenize the given document
@@ -130,7 +132,7 @@ class Indexes:
       zip(dictionary_df['term'], dictionary_df['doc_freq'])
     )
 
-  def bm25_score_term_doc(self, term, doc_id, k1 = 1.25, b = 0.75):
+  def bm25_score(self, term, doc_id, k1 = 1.25, b = 0.75):
     df_term = self.doc_freq[term]
     tf_term_doc = self.term_to_freq_pos[(doc_id, term)][0]
 
@@ -138,6 +140,15 @@ class Indexes:
     score_tf = ((k1 + 1) * tf_term_doc / 
                 (k1 * (1 - b + b * self.doc_length[doc_id] / 
                 self.avg_doc_length) + tf_term_doc))
+    return(score_idf * score_tf)
+
+  def bm25_v1_score(self, term, doc_id, k1 = 1.25, b = 0.75):
+    # based on BM25 but does not discriminate long documents
+    df_term = self.doc_freq[term]
+    tf_term_doc = self.term_to_freq_pos[(doc_id, term)][0]
+
+    score_idf = math.log((self.doc_count - df_term + 0.5) / (df_term + 0.5))
+    score_tf = ((k1 + 1) * tf_term_doc / (k1 + tf_term_doc))
     return(score_idf * score_tf)
   
   def rank_doc(self, query, ranker, doc_id_list = None, **kwargs):
@@ -162,6 +173,7 @@ class Indexes:
         doc_score[i] += ranking_func(term, doc_id, **kwargs)
     return(doc_score)
 
+# function: get_retrieval_results ---------------------------------------------
 def get_retrieval_results(query, filter_by_character = "", num_results = 10):
   # filter documents to be queried
   if filter_by_character == "":
