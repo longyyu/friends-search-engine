@@ -109,8 +109,11 @@ if __name__ == "__main__":
   #   )
   # # evaluate ranker performance
   # baseline_eval = evaluate_query_result(query_result)
+  
+  # baseline_eval = baseline_eval.append(pd.DataFrame.from_records(
+  #   dict(baseline_eval[["ap", "ndcg"]].mean()), index = pd.Index(["Mean"])
+  # ))
   # print(baseline_eval)
-  # print(baseline_eval[["ap", "ndcg"]].mean())
 
   # evaluate other ranking functions ---------------------------
   from inverted_index import get_retrieval_results
@@ -227,7 +230,10 @@ if __name__ == "__main__":
   # )
   # print(rankers_eval.sort_values(by = "ap", ascending = False).head(10))
 
-  # others ---------------------------------------------------------
-  print(evaluate_ranker(ranker = "es"))
-  print(evaluate_ranker(ranker = "f2exp"))
-  # print(evaluate_ranker(ranker = "bm25", k1 = 1.6, b = 0.8)) # best model
+  # others: ES & F2EXP ----------------------------------------------------
+  print(
+    pd.concat(
+      [evaluate_ranker(ranker = "es"), evaluate_ranker(ranker = "f2exp")],
+      ignore_index = True
+    )[["ranker", "params", "ap", "ndcg"]]
+  )
