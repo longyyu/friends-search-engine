@@ -26,19 +26,19 @@ class Indexes:
     self.doc_length = dict(zip(self.doc_id, [len(doc) for doc in documents]))
     self.avg_doc_length = np.mean(list(self.doc_length.values()))    
     # self.doc_tokens: a dictionary that maps a document's ID to its tokens
-    self.doc_tokens = read_dict("./data/doc_tokens.pkl") \
-      if os.path.exists("./data/doc_tokens.pkl") else None
+    self.doc_tokens = read_dict("./data/doc_tokens.pkl")
     if self.doc_tokens is None:
       self.tokenize_all_documents()
     
-    self.corpus_term_freq = dict() # a dict that maps a term to its frequency
-                                   # in the corpus (i.e. all documents)
-    self.compute_corpus_term_freq() # initialize corpus term frequency dict
+    # self.corpus_term_freq: a dictionary that maps a term to its frequency
+    # in the corpus (i.e. all documents)
+    self.corpus_term_freq = read_dict("./data/corpus_term_freq.pkl")
+    if self.corpus_term_freq is None:
+      self.compute_corpus_term_freq() # initialize corpus term frequency dict
     
     # self.term_to_freq_pos: a dictionary that maps a tuple of (doc_id, term)
     # to a list of [term frequency (an integer), position (a integer list)]
-    self.term_to_freq_pos = read_dict("./data/term_to_freq_pos.pkl") \
-      if os.path.exists("./data/term_to_freq_pos.pkl") else None
+    self.term_to_freq_pos = read_dict("./data/term_to_freq_pos.pkl")
     if self.term_to_freq_pos is None:
       self.generate_inverted_index()    
     # self.doc_freq: a dictionary that maps term to its document frequency
@@ -82,6 +82,7 @@ class Indexes:
   
   @measure_time
   def compute_corpus_term_freq(self):
+    self.corpus_term_freq = dict() 
     for doc_id in self.doc_id:
       for term in self.doc_tokens[doc_id]:
         if term in self.stop_list:
@@ -89,6 +90,7 @@ class Indexes:
         if term not in self.corpus_term_freq:
           self.corpus_term_freq[term] = 0
         self.corpus_term_freq[term] += 1
+    save_dict(self.corpus_term_freq, "./data/corpus_term_freq.pkl")
 
   @measure_time
   def generate_inverted_index(self):
@@ -234,8 +236,8 @@ def get_retrieval_results(query, filter_by_character = "", num_results = 10):
   if filter_by_character == "":
     query_doc_id = indexes.doc_id
   else:
-    query_doc_id = script_utterance_tmp.loc[ #! update to all docs
-      script_utterance_tmp.speakers == filter_by_character, "u_id"
+    query_doc_id = script_utterance.loc[
+      script_utterance.speakers == filter_by_character, "u_id"
     ].tolist()
 
   # rank the documents
@@ -262,9 +264,8 @@ with open('./data/lemur-stopwords.txt', 'r',
   f.close()
 
 # set up documents and doc_id
-script_utterance_tmp = script_utterance.iloc[:4001, ] #! update to all docs
-documents = script_utterance_tmp.transcript.tolist() #! update to all docs
-doc_id = script_utterance_tmp.u_id.tolist() #! update to all docs
+documents = script_utterance.transcript.tolist()
+doc_id = script_utterance.u_id.tolist()
 
 # build inverted index
 indexes = Indexes(
@@ -283,4 +284,4 @@ if __name__ == "__main__":
   )
   print(result_list)
   # for u_id in result_list:
-  #    print(get_script_with_uid(script_utterance, u_id, 1))
+  #    print(get_script_with_uid(script_utterance, u_id))
