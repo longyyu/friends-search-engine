@@ -7,8 +7,9 @@ from datetime import datetime
 import re
 
 import os
-#from metapy import metapy
-#from config_metapy import config_file, inv_idx, get_retrieval_results
+# from metapy import metapy
+# from config_metapy import config_file, inv_idx, \
+#   get_retrieval_results as get_retrieval_results_metapy
 from data_prep import script_utterance, get_script_with_uid, \
                       get_episode_with_uid, character_list
 from inverted_index import indexes, get_retrieval_results
@@ -57,15 +58,17 @@ def index():
 @app.route("/search_results/q=<query>/c=<character>", methods=["GET", "POST"])
 def search_results(query, character):
   start_time = datetime.now()
-  # result_list = get_retrieval_results(
+  # result_list = get_retrieval_results_metapy(
   #   query_content = query,
   #   ranker =  metapy.index.OkapiBM25(k1 = 1.2, b = 0.75, k3 = 500),
   #   inv_idx = inv_idx,
   #   df_uid = script_utterance,
-  #   num_results = 10 #! should not limit the # of results?
+  #   num_results = 10
   # )
   result_list = get_retrieval_results(
-    query = query, ranker = "bm25", filter_by_character = character
+    query = query, ranker = "bm25", 
+    filter_by_character = character, num_results = 20, 
+    k1 = 1.6, b = 0.8
   )
   docs = [get_script_with_uid(
             df = script_utterance, 
@@ -100,4 +103,4 @@ def script(uid):
                          script = get_episode_with_uid(script_utterance, uid))
 
 if __name__ == "__main__":
-  app.run(threaded = False)
+  app.run() # threaded = False for the metapy implementation
