@@ -231,7 +231,9 @@ class Indexes:
     return(doc_score)
 
 # function: get_retrieval_results ---------------------------------------------
-def get_retrieval_results(query, filter_by_character = "", num_results = 10):
+def get_retrieval_results(
+  query, ranker, filter_by_character = "", num_results = 10
+):
   # filter documents to be queried
   if filter_by_character == "":
     query_doc_id = indexes.doc_id
@@ -242,7 +244,7 @@ def get_retrieval_results(query, filter_by_character = "", num_results = 10):
 
   # rank the documents
   doc_score =  indexes.rank_doc(
-    query = query, ranker = "bm25", doc_id_list = query_doc_id
+    query = query, ranker = ranker, doc_id_list = query_doc_id
   )
 
   # organize the ranking results
@@ -279,6 +281,7 @@ if __name__ == "__main__":
   result_list = get_retrieval_results(
     query = "you're going out with the guy",
     # query = "Rosita the chair",
+    ranker = "bm25",
     filter_by_character = "Joey Tribbiani",
     # num_results = None
   )
