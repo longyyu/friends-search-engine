@@ -31,9 +31,9 @@ class Indexes:
     if self.doc_tokens is None:
       self.tokenize_all_documents()
     
-    self.corpus_freq = dict() # a dictionary that maps a term to its total 
-                              # frequency in the corpus (i.e. all documents)
-    self.compute_corpus_freq() # initialize corpus frequency
+    self.corpus_term_freq = dict() # a dict that maps a term to its frequency
+                                   # in the corpus (i.e. all documents)
+    self.compute_corpus_term_freq() # initialize corpus term frequency dict
     
     # self.term_to_freq_pos: a dictionary that maps a tuple of (doc_id, term)
     # to a list of [term frequency (an integer), position (a integer list)]
@@ -47,7 +47,8 @@ class Indexes:
 
     # self.ranker_map: a dictionary that maps string to a ranking function
     self.ranker_map = dict(
-      bm25 = self.bm25_score, bm25_v1 = self.bm25_v1_score
+      bm25 = self.score_bm25, bm25_v1 = self.score_bm25_v1,
+      es = self.score_es#, f2exp = self.score_f2exp, lm = self.score_lm
     )
 
   def tokenize(self, document, remove_stop_words = False):
@@ -76,14 +77,14 @@ class Indexes:
     save_dict(self.doc_tokens, "./data/doc_tokens.pkl")
   
   @measure_time
-  def compute_corpus_freq(self):
+  def compute_corpus_term_freq(self):
     for doc_id in self.doc_id:
       for term in self.doc_tokens[doc_id]:
         if term in self.stop_list:
           continue
-        if term not in self.corpus_freq:
-          self.corpus_freq[term] = 0
-        self.corpus_freq[term] += 1
+        if term not in self.corpus_term_freq:
+          self.corpus_term_freq[term] = 0
+        self.corpus_term_freq[term] += 1
 
   @measure_time
   def generate_inverted_index(self):
@@ -132,24 +133,41 @@ class Indexes:
       zip(dictionary_df['term'], dictionary_df['doc_freq'])
     )
 
-  def bm25_score(self, term, doc_id, k1 = 1.25, b = 0.75):
+  def score_bm25(self, term, doc_id, k1 = 1.25, b = 0.75, k3 = 500):
     df_term = self.doc_freq[term]
     tf_term_doc = self.term_to_freq_pos[(doc_id, term)][0]
+    qtf_term_query = self.query_term_freq[term]
 
     score_idf = math.log((self.doc_count - df_term + 0.5) / (df_term + 0.5))
     score_tf = ((k1 + 1) * tf_term_doc / 
                 (k1 * (1 - b + b * self.doc_length[doc_id] / 
                 self.avg_doc_length) + tf_term_doc))
-    return(score_idf * score_tf)
+    score_qtf = ((k3 + 1) * qtf_term_query) / (k3 + qtf_term_query)
+    return(score_idf * score_tf * score_qtf)
 
-  def bm25_v1_score(self, term, doc_id, k1 = 1.25, b = 0.75):
+  def score_bm25_v1(self, term, doc_id, k1 = 1.25, b = 0.75, k3 = 500):
     # based on BM25 but does not discriminate long documents
     df_term = self.doc_freq[term]
     tf_term_doc = self.term_to_freq_pos[(doc_id, term)][0]
+    qtf_term_query = self.query_term_freq[term]
 
     score_idf = math.log((self.doc_count - df_term + 0.5) / (df_term + 0.5))
     score_tf = ((k1 + 1) * tf_term_doc / (k1 + tf_term_doc))
-    return(score_idf * score_tf)
+    score_qtf = ((k3 + 1) * qtf_term_query) / (k3 + qtf_term_query)
+    return(score_idf * score_tf * score_qtf)
+  
+  def score_es(self, term, doc_id):
+    # a term-weighting function developed by a evolutionary learning approach
+    # [Cummins & O’Riordan, 2007]
+    score_idf = math.sqrt(
+      (self.corpus_term_freq[term]**3 * self.doc_count) / \
+      (self.doc_freq[term]**4)
+    )
+    tf_term_doc = self.term_to_freq_pos[(doc_id, term)][0]
+    score_tf = (tf_term_doc) / (tf_term_doc + 0.45 * math.sqrt(
+      self.doc_length[doc_id] / self.avg_doc_length))
+    score_qtf = self.query_term_freq[term]
+    return(score_idf * score_tf * score_qtf)
   
   def rank_doc(self, query, ranker, doc_id_list = None, **kwargs):
     # inputs:
@@ -162,15 +180,25 @@ class Indexes:
     #         all documents if doc_id_list is None)
 
     ranking_func = self.ranker_map[ranker]
+    # tokenize the query and build the query term frequency dictionary
+    self.query_term_freq = dict()
     query_tokens = self.tokenize(query, remove_stop_words = True)
+    for term in query_tokens:
+      if term not in self.query_term_freq:
+        self.query_term_freq[term] = 0
+      self.query_term_freq[term] += 1
+    # process doc_id_list and initialize an empty list doc_score
     if doc_id_list is None: 
       # if the user did not specify doc_id_list, will go through all documents
       doc_id_list = self.doc_id
     doc_score = [0] * len(doc_id_list)
+    # rank each document in the doc_id_list given the query
     for i, doc_id in enumerate(doc_id_list):
       common_tokens = set(query_tokens) & set(self.doc_tokens[doc_id])
       for term in common_tokens:
         doc_score[i] += ranking_func(term, doc_id, **kwargs)
+    # delete attribute query_term_freq
+    delattr(self, "query_term_freq")
     return(doc_score)
 
 # function: get_retrieval_results ---------------------------------------------
@@ -185,8 +213,7 @@ def get_retrieval_results(query, filter_by_character = "", num_results = 10):
 
   # rank the documents
   doc_score =  indexes.rank_doc(
-    query = query, ranker = "bm25", doc_id_list = query_doc_id,
-    k1 = 1.25, b = 0.75
+    query = query, ranker = "bm25", doc_id_list = query_doc_id
   )
 
   # organize the ranking results
@@ -197,7 +224,7 @@ def get_retrieval_results(query, filter_by_character = "", num_results = 10):
   doc_score_df = doc_score_df.loc[doc_score_df.score > 0]
   if num_results is not None:
     doc_score_df = doc_score_df.loc[0:(num_results - 1)]
-  
+  print(doc_score_df.score) #! delete
   return(doc_score_df.doc_id.tolist())
 
 # -----------------------------------------------------------------------------
@@ -224,6 +251,6 @@ if __name__ == "__main__":
   print(get_retrieval_results(
     query = "you're going out with the guy",
     # query = "Rosita the chair",
-    # filter_by_character = "Joey Tribbiani",
+    filter_by_character = "Joey Tribbiani",
     # num_results = None
   ))
