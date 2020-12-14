@@ -82,3 +82,32 @@ def evaluate_query_result(query_result):
   #   ndcg = evaluation_result.ndcg.mean()
   # ), ignore_index = True)
   return(evaluation_result)
+
+
+if __name__ == "__main__":
+  NUM_RESULT = 10
+  
+  # retrieve documents using the baseline model
+  from metapy import metapy
+  from config_metapy import inv_idx, \
+    get_retrieval_results as get_retrieval_results_metapy
+  from data_prep import script_utterance, query_list
+
+  ranker =  metapy.index.OkapiBM25(k1 = 1.2, b = 0.75, k3 = 500)  
+  query_result = pd.DataFrame()
+  for q_id, query in enumerate(query_list):
+    query_result = query_result.append(
+      pd.DataFrame(dict(
+        query_id = q_id, 
+        doc_id = get_retrieval_results_metapy(
+          query, ranker, inv_idx, script_utterance, 
+          num_results = NUM_RESULT,
+          return_type = "row_idx"
+        )
+      )), 
+      ignore_index = True
+    )
+  # evaluate ranker performance
+  baseline_eval = evaluate_query_result(query_result)
+  print(baseline_eval)
+  print(baseline_eval[["ap", "ndcg"]].mean())

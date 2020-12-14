@@ -2,7 +2,6 @@ import os
 from metapy import metapy
 
 from data_prep import script_utterance, query_list
-from ranker_evaluation import evaluate_query_result
 
 # Metapy Settings
 #  - Creating config files, DAT files, inv_idx
@@ -108,47 +107,26 @@ if __name__ == "__main__":
   # query_result.to_csv("./data/friends-qrels-blank.txt", sep = " ",
   #                     header = False, index = False)
   
-  # # baseline model evaluation using metapy's IREval -------------------------
-  # num_testing_queries = len(query_list)  
-  # df_baseline_eval = pd.DataFrame(
-  #     index = pd.Index(list(range(num_testing_queries)) + ["Mean"]), 
-  #     columns = ["AP", "NDCG"]
-  # )
+  # baseline model evaluation using metapy's IREval -------------------------
+  num_testing_queries = len(query_list)  
+  df_baseline_eval = pd.DataFrame(
+      index = pd.Index(list(range(num_testing_queries)) + ["Mean"]), 
+      columns = ["AP", "NDCG"]
+  )
 
-  # ev = metapy.index.IREval(config_file)
-  # num_results = 10
-  # for query_num, query_content in enumerate(query_list):
-  #   query = metapy.index.Document()
-  #   query.content(query_content)
-  #   results = ranker.score(inv_idx, query, num_results)     
+  ev = metapy.index.IREval(config_file)
+  num_results = 10
+  for query_num, query_content in enumerate(query_list):
+    query = metapy.index.Document()
+    query.content(query_content)
+    results = ranker.score(inv_idx, query, num_results)     
 
-  #   df_baseline_eval.iloc[query_num] = dict(
-  #     AP = ev.avg_p(results, query_num, num_results), 
-  #     NDCG = ev.ndcg(results, query_num, num_results)
-  #   )
-  # # calculate average AP and NDCG
-  # df_baseline_eval.iloc[num_testing_queries] = dict(
-  #   AP = ev.map(), NDCG = df_baseline_eval.NDCG.mean()
-  # )
-  # print(df_baseline_eval)
-
-  # evaluate the baseline model ---------------------------------------------
-  # retrieve documents using the baseline model
-  NUM_RESULT = 10
-  query_result = pd.DataFrame()
-  for q_id, query in enumerate(query_list):
-    query_result = query_result.append(
-      pd.DataFrame(dict(
-        query_id = q_id, 
-        doc_id = get_retrieval_results(
-          query, ranker, inv_idx, script_utterance, 
-          num_results = NUM_RESULT,
-          return_type = "row_idx"
-        )
-      )), 
-      ignore_index = True
+    df_baseline_eval.iloc[query_num] = dict(
+      AP = ev.avg_p(results, query_num, num_results), 
+      NDCG = ev.ndcg(results, query_num, num_results)
     )
-  # evaluate ranker performance
-  baseline_eval = evaluate_query_result(query_result)
-  print(baseline_eval)
-  print(baseline_eval[["ap", "ndcg"]].mean())
+  # calculate average AP and NDCG
+  df_baseline_eval.iloc[num_testing_queries] = dict(
+    AP = ev.map(), NDCG = df_baseline_eval.NDCG.mean()
+  )
+  print(df_baseline_eval)
