@@ -5,8 +5,8 @@ from wtforms import SelectField, StringField, SubmitField
 from wtforms.validators import DataRequired
 from datetime import datetime
 import re
-
 import os
+
 # from metapy import metapy
 # from config_metapy import config_file, inv_idx, \
 #   get_retrieval_results as get_retrieval_results_metapy
@@ -14,7 +14,7 @@ from data_prep import script_utterance, get_script_with_uid, \
                       get_episode_with_uid, character_list
 from inverted_index import indexes, get_retrieval_results
 
-# Purpose: This script #! add header
+# Purpose: This script builds up the user interface of the web app. 
 # Author: Yanyu Long
 # Updated: Dec 11, 2020
 
