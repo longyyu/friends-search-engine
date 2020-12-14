@@ -9,7 +9,7 @@ import re
 #  - function definition: get_script_with_uid, get_episode_with_uid
 # Term Project, SI650, F20
 # Author: Yanyu Long, longyyu@umich.edu
-# Updated: Dec 12, 2020
+# Updated: Dec 14, 2020
 
 json_dir = "./data/json/"
 json_file = json_dir + "friends_season_{:02d}.json"
@@ -70,6 +70,9 @@ else:
     sep = '\t', index = False
   )
 
+# generate a dictionary that maps utterance ID to row index
+uid_to_rowidx = dict(zip(script_utterance.u_id, script_utterance.index))
+
 # read in query list and query judgement data ---------------------------------
 with open("./data/friends-queries.txt") as f:
     query_list = [line.strip() for line in f]
@@ -96,11 +99,16 @@ def pretty_cid(cid):
 
 # function: get_script_with_uid ----------------------------------------------
 def get_script_with_uid(df, u_id, plus_minus = 0, output_format = "terminal"):
-  #! add header here
+  # returns the formatted script of an utterance given the utterance ID (u_id)
   # inputs:
-  #   df: 
-  #   ... 
-  #   output_format: one of ["terminal", "html"]
+  #   df: a pd.DataFrame object with columns ["u_id", "speakers", "transcript"]
+  #   u_id: a string in the form of "s01_e01_c01_u001", the ID that uniquely 
+  #         identifies an utterance
+  #   plus_minus: the number of utterances to include before and after the 
+  #               target utterance
+  #   output_format: one of ["terminal", "html"], whether the script will be 
+  #                  printed in terminal or an HTML page
+  # output: a string, the formatted script
   if output_format == "terminal":
     sym_newline = "\n"
     sym_red = "\x1b[1;31;47m"
@@ -110,21 +118,22 @@ def get_script_with_uid(df, u_id, plus_minus = 0, output_format = "terminal"):
     sym_red = "<span style='color:IndianRed'>"
     sym_normal = "</span>"
   
+  row_idx = uid_to_rowidx[u_id]
   if plus_minus <= 0:
-    df_target = df.loc[df.u_id == u_id].reset_index()
+    df_target = df.iloc[row_idx]
     script = "{} ({}){}[{}] {}{}".format(
       u_id,
-      df_target.loc[0, "index"],
+      row_idx,
       sym_newline,
-      df_target.loc[0, "speakers"],
-      df_target.loc[0, "transcript"],
+      df_target.speakers,
+      df_target.transcript,
       sym_newline
     )
   else:
     cid = pd.Series(u_id).str.extract(r"(.*)_u").loc[0, 0]
-    row_idx = df.loc[(df.u_id == u_id)].index.tolist()[0]
     df_target = df.loc[range(max(0, row_idx - plus_minus), 
-                             row_idx+plus_minus + 1)]
+                             min(len(df), row_idx + plus_minus + 1))]
+    # drop utterances that belong to another scene (with a different cid)
     df_target = df_target.loc[df_target.u_id.str.contains(cid)]\
                          .reset_index(drop = True)
 
@@ -157,10 +166,13 @@ def get_script_with_uid(df, u_id, plus_minus = 0, output_format = "terminal"):
 
 # function: get_episode_with_uid ----------------------------------------------
 def get_episode_with_uid(df, uid):
-  #! add header
-
-  sym_newline = "<br>"
+  # given utterance ID (uid), returns the HTML formatted script for the 
+  # entire episode
+  
   def format_scene_script(cid, df_scene):
+    # a sub-function that, given the utterances of a specific scene,
+    # (i.e. a subset of the outer function's df)
+    # returns the HTML formatted script for that scene
     cid_fmt = "{}<span style='background-color: WhiteSmoke; "\
               "font-size: 18px;'>{}</span>{}{}"
     script = cid_fmt.format(
@@ -181,11 +193,12 @@ def get_episode_with_uid(df, uid):
   # extract episode id from utterance id
   eid = re.compile("s[0-9]{2}_e[0-9]{2}").findall(uid)[0]
   # extract all rows of that episode from df
-  df_target = df.loc[df.u_id.str.match(eid), ].reset_index(drop = True)
-  # extract scene id (cid) of all scenes
+  df_target = df.loc[df.u_id.str.match(eid)].reset_index(drop = True)
+  # extract scene id (cid) of all scenes in that episode
   df_target['c_id'] = df_target.u_id.str.extract(r"(.*)_u")
   cid_list = df_target.c_id.unique()
   # format and concatenate script from each scene
+  sym_newline = "<br>"
   episode = sym_newline.join([
     format_scene_script(
       cid, df_target.loc[df_target.c_id == cid].reset_index(drop = True)
@@ -203,9 +216,14 @@ character_list = script_utterance.pivot_table(
 character_list.remove("#ALL#")
 
 if __name__ == "__main__":
-  # print out the character list in descending order of their 
-  # total utterances across ten seasons
-  print(
-    [("", "Select a character")] + \
-      [(name, name.split(" ")[0]) for name in character_list[:20]]
-  )
+  # # print out the character list in descending order of their 
+  # # total utterances across ten seasons
+  # print(
+  #   [("", "Select a character")] + \
+  #     [(name, name.split(" ")[0]) for name in character_list[:20]]
+  # )
+  u_id = "s02_e14_c03_u009"
+  print(get_script_with_uid(script_utterance, u_id))
+  print(get_script_with_uid(script_utterance, u_id, 1))
+  print(get_script_with_uid(script_utterance, u_id, output_format = "html"))
+  print(get_script_with_uid(script_utterance, u_id, 2, output_format = "html"))
