@@ -5,6 +5,7 @@ import re
 
 # Data Preparation
 #  - fead JSON file as pd.DataFrame, store as TSV
+#  - generate dictionary uid_to_rowidx
 #  - read testing query list (query_list) and annotations (query_relevance)
 #  - function definition: get_script_with_uid, get_episode_with_uid
 # Term Project, SI650, F20
