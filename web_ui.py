@@ -65,7 +65,7 @@ def search_results(query, character):
   #   num_results = 10 #! should not limit the # of results?
   # )
   result_list = get_retrieval_results(
-    query = query, filter_by_character = character
+    query = query, ranker = "bm25", filter_by_character = character
   )
   docs = [get_script_with_uid(
             df = script_utterance, 
