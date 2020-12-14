@@ -68,7 +68,7 @@ def search_results(query, character):
   result_list = get_retrieval_results(
     query = query, ranker = "bm25", 
     filter_by_character = character, num_results = 20, 
-    k1 = 1.6, b = 0.8
+    k1 = 1.8, b = 0.75
   )
   docs = [get_script_with_uid(
             df = script_utterance, 
