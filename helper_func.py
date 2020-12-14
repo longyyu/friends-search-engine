@@ -1,10 +1,11 @@
 import time
 import pickle
+import os
 
 # Purpose: This script defines helper functions that will be called 
 #          by other modules. 
 # Author: Yanyu Long
-# Updated: Dec 11, 2020
+# Updated: Dec 14, 2020
 
 # Define a decorator to measure the execution times of dedicated methods
 def measure_time(f):
@@ -20,8 +21,12 @@ def measure_time(f):
 
 @measure_time
 def read_dict(file_path):
-  with open(file_path, 'rb') as f:
-    obj = pickle.load(f)
+  if os.path.exists(file_path):
+    with open(file_path, 'rb') as f:
+      obj = pickle.load(f)
+  else:
+    obj = None
+    print(f"Cannot find {file_path}!")
   return(obj)
 
 @measure_time
