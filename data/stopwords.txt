@@ -136,7 +136,6 @@ have
 he
 hence
 henceforth
-her
 here
 hereabouts
 hereafter
@@ -144,18 +143,12 @@ hereby
 herein
 hereto
 hereupon
-hers
-herself
-him
-himself
 hindmost
-his
 hither
 hitherto
 how
 however
 howsoever
-i
 ie
 if
 in
@@ -192,7 +185,6 @@ ltd
 many
 may
 maybe
-me
 meantime
 meanwhile
 might
@@ -240,10 +232,6 @@ other
 others
 otherwise
 ought
-our
-ours
-ourselves
-out
 outside
 over
 own
@@ -273,7 +261,6 @@ selves
 sent
 several
 shalt
-she
 should
 shown
 sideways
@@ -326,7 +313,6 @@ thereon
 thereto
 thereupon
 these
-they
 this
 those
 thou
@@ -336,8 +322,6 @@ through
 throughout
 thru
 thus
-thy
-thyself
 till
 to
 together
@@ -355,7 +339,6 @@ up
 upon
 upward
 upwards
-us
 use
 used
 using
@@ -401,11 +384,9 @@ whichsoever
 while
 whilst
 whither
-who
 whoa
 whoever
 whole
-whom
 whomever
 whomsoever
 whose
@@ -424,8 +405,3 @@ ye
 yet
 year
 yippee
-you
-your
-yours
-yourself
-yourselves
