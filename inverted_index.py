@@ -7,7 +7,7 @@ import math
 import os
 
 from helper_func import measure_time, read_dict, save_dict
-from data_prep import script_utterance
+from data_prep import script_utterance, get_script_with_uid
 
 # Purpose: This script defines class Indexes, which is used to tokenize 
 #          documents, generate inverted index, and rank documents given
@@ -47,8 +47,12 @@ class Indexes:
 
     # self.ranker_map: a dictionary that maps string to a ranking function
     self.ranker_map = dict(
-      bm25 = self.score_bm25, bm25_v1 = self.score_bm25_v1,
-      es = self.score_es#, f2exp = self.score_f2exp, lm = self.score_lm
+      bm25 = self.score_bm25, 
+      bm25_v1 = self.score_bm25_v1,
+      piv = self.score_piv,
+      es = self.score_es, 
+      f2exp = self.score_f2exp,
+      tsl = self.score_tsl
     )
 
   def tokenize(self, document, remove_stop_words = False):
@@ -156,6 +160,14 @@ class Indexes:
     score_qtf = ((k3 + 1) * qtf_term_query) / (k3 + qtf_term_query)
     return(score_idf * score_tf * score_qtf)
   
+  def score_piv(self, term, doc_id, b = 0.1):
+    score_idf = math.log((self.doc_count + 1) / (self.doc_freq[term]))
+    tf_term_doc = self.term_to_freq_pos[(doc_id, term)][0]
+    score_tf = (1 + math.log(1 + math.log(tf_term_doc))) / \
+               (1 - b + b * self.doc_length[doc_id] / self.avg_doc_length)
+    score_qtf = self.query_term_freq[term]
+    return(score_idf * score_tf * score_qtf)
+  
   def score_es(self, term, doc_id):
     # a term-weighting function developed by a evolutionary learning approach
     # [Cummins & O’Riordan, 2007]
@@ -168,6 +180,21 @@ class Indexes:
       self.doc_length[doc_id] / self.avg_doc_length))
     score_qtf = self.query_term_freq[term]
     return(score_idf * score_tf * score_qtf)
+  
+  def score_f2exp(self, term, doc_id):
+    score_idf = (self.doc_count / self.doc_freq[term])**0.35
+    tf_term_doc = self.term_to_freq_pos[(doc_id, term)][0]
+    score_tf = (tf_term_doc / (tf_term_doc + 0.5 + \
+                0.5 * self.doc_length[doc_id] / self.avg_doc_length))
+    score_qtf = self.query_term_freq[term]
+    return(score_idf * score_tf * score_qtf)
+
+  def score_tsl(self, term, doc_id, mu = 3500):
+    tf_term_doc = self.term_to_freq_pos[(doc_id, term)][0]
+    score = (tf_term_doc + \
+        mu * self.corpus_term_freq[term] / len(self.corpus_term_freq)
+      ) / (self.doc_length[doc_id] + mu)
+    return(score)
   
   def rank_doc(self, query, ranker, doc_id_list = None, **kwargs):
     # inputs:
@@ -248,9 +275,12 @@ indexes = Indexes(
 )
 
 if __name__ == "__main__":
-  print(get_retrieval_results(
+  result_list = get_retrieval_results(
     query = "you're going out with the guy",
     # query = "Rosita the chair",
     filter_by_character = "Joey Tribbiani",
     # num_results = None
-  ))
+  )
+  print(result_list)
+  # for u_id in result_list:
+  #    print(get_script_with_uid(script_utterance, u_id, 1))
