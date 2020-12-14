@@ -232,7 +232,7 @@ class Indexes:
 
 # function: get_retrieval_results ---------------------------------------------
 def get_retrieval_results(
-  query, ranker, filter_by_character = "", num_results = 10
+  query, ranker, filter_by_character = "", num_results = 10, **kwargs
 ):
   # filter documents to be queried
   if filter_by_character == "":
@@ -244,7 +244,7 @@ def get_retrieval_results(
 
   # rank the documents
   doc_score =  indexes.rank_doc(
-    query = query, ranker = ranker, doc_id_list = query_doc_id
+    query = query, ranker = ranker, doc_id_list = query_doc_id, **kwargs
   )
 
   # organize the ranking results
@@ -255,7 +255,6 @@ def get_retrieval_results(
   doc_score_df = doc_score_df.loc[doc_score_df.score > 0]
   if num_results is not None:
     doc_score_df = doc_score_df.loc[0:(num_results - 1)]
-  print(doc_score_df.score) #! delete
   return(doc_score_df.doc_id.tolist())
 
 # -----------------------------------------------------------------------------
