@@ -167,10 +167,7 @@ if __name__ == "__main__":
   #     ), axis = 1
   #   )), 
   #   ignore_index = True
-  # )
-  # rankers_eval[["ranker", "params", "ap", "ndcg"]].to_csv(
-  #   "./data/ranker_evaluation_bm25.csv", index = False
-  # )
+  # )[["ranker", "params", "ap", "ndcg"]]
   # print(rankers_eval.sort_values(by = "ap", ascending = False).head(10))
 
   # # bm25_v1 ---------------------------------------------------------------
@@ -190,10 +187,7 @@ if __name__ == "__main__":
   #     ), axis = 1
   #   )), 
   #   ignore_index = True
-  # )
-  # rankers_eval[["ranker", "params", "ap", "ndcg"]].to_csv(
-  #   "./data/ranker_evaluation_bm25_v1.csv", index = False
-  # )
+  # )[["ranker", "params", "ap", "ndcg"]]
   # print(rankers_eval.sort_values(by = "ap", ascending = False).head(10))
 
   # # pivoted length ------------------------------------------------------
@@ -207,10 +201,7 @@ if __name__ == "__main__":
   #     ), axis = 1
   #   )), 
   #   ignore_index = True
-  # )
-  # rankers_eval[["ranker", "params", "ap", "ndcg"]].to_csv(
-  #   "./data/ranker_evaluation_piv.csv", index = False
-  # )
+  # )[["ranker", "params", "ap", "ndcg"]]
   # print(rankers_eval.sort_values(by = "ap", ascending = False).head(10))
 
   # # tsl ---------------------------------------------------------------
@@ -224,10 +215,7 @@ if __name__ == "__main__":
   #     ), axis = 1
   #   )), 
   #   ignore_index = True
-  # )
-  # rankers_eval[["ranker", "params", "ap", "ndcg"]].to_csv(
-  #   "./data/ranker_evaluation_tsl.csv", index = False
-  # )
+  # )[["ranker", "params", "ap", "ndcg"]]
   # print(rankers_eval.sort_values(by = "ap", ascending = False).head(10))
 
   # others: ES & F2EXP ----------------------------------------------------
