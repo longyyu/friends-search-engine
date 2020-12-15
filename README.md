@@ -9,7 +9,7 @@ A vertical search engine for scripts of FRIENDS, the popular American TV sitcom.
 This is the term project for SI650 / EECS549 at the University of Michigan.  
 The FRIENDS corpus data comes from github repository [emorynlp/character-mining](https://github.com/emorynlp/character-mining).
 
-## Installation  
+## Setup  
 ***Note: this project is written in Python3 (3.7).*** 
 
 * clone this repository  
@@ -22,7 +22,6 @@ The FRIENDS corpus data comes from github repository [emorynlp/character-mining]
 
 ## Source files  
 
-&nbsp;&nbsp;&nbsp;
 ![#c5f015](https://via.placeholder.com/15/c5f015/000000?text=+)
 ***Python scripts***  
 ├── config_metapy.py *# set up the baseline model (metapy)*  
@@ -32,6 +31,8 @@ The FRIENDS corpus data comes from github repository [emorynlp/character-mining]
 ├── ranker_evaluation.py *# evaluates ranker performance using AP and NDCG*  
 ├── web_ui.py *# defines the flask framework of the web app*  
 <br>
+![#c5f015](https://via.placeholder.com/15/c5f015/000000?text=+)
+***data files***  
 ├── **data**  
 │   ├── json.tar.gz *# original FRIENDS corpus data in JSON format, archived*  
 │   ├── script_id_speaker_10seasons.tsv *# pre-processed FRIENDS corpus data*  
@@ -45,7 +46,8 @@ The FRIENDS corpus data comes from github repository [emorynlp/character-mining]
 │   ├── corpus_term_freq.pkl *# same as above*  
 │   └── doc_tokens.pkl *# same as above*  
 <br>
-***files for the web app's user interface***    
+![#c5f015](https://via.placeholder.com/15/c5f015/000000?text=+)
+***files for the web app's user interface***  
 ├── **static** *# static resources*  
 │   ├── FriendsLogo.png  
 │   ├── blogpost.html  
