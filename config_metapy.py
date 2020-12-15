@@ -1,7 +1,6 @@
 import os
 from metapy import metapy
-
-from data_prep import script_utterance, query_list
+from data_prep import script_utterance
 
 # Metapy Settings
 #  - Creating config files, DAT files, inv_idx
@@ -73,39 +72,11 @@ def get_retrieval_results(query_content, ranker, inv_idx, df_uid,
   else:
       return([x[0] for x in results])
 
+
 if __name__ == "__main__":
   import pandas as pd
-  from data_prep import get_script_with_uid
+  from data_prep import get_script_with_uid, query_list
   ranker =  metapy.index.OkapiBM25(k1 = 1.2, b = 0.75, k3 = 500)
-
-  # # a single query -----------------------
-  # query = "statistics data configuration"
-  # print(query)
-  # result_list = get_retrieval_results(
-  #    query, ranker, inv_idx, script_utterance, num_results = 10
-  # )
-  # for u_id in result_list:
-  #    print(get_script_with_uid(script_utterance, u_id, 1))
-
-  # # generate qrels ------------------------------
-  # query_result = pd.DataFrame()
-  # for q_id, query in enumerate(query_list):
-  #   query_result = query_result.append(
-  #     pd.DataFrame(dict(
-  #       query_id = q_id, 
-  #       result_id = get_retrieval_results(
-  #         query, ranker, inv_idx, script_utterance, 
-  #         num_results = 20,
-  #         return_type = "row_idx"
-  #       )
-  #     )), 
-  #     ignore_index = True
-  #   )
-  # # query_result['transcript'] = script_utterance.iloc[query_result.result_id]\
-  # #   ['transcript'].tolist()
-  # print(query_result.loc[query_result.query_id == 0])
-  # query_result.to_csv("./data/friends-qrels-blank.txt", sep = " ",
-  #                     header = False, index = False)
   
   # baseline model evaluation using metapy's IREval -------------------------
   num_testing_queries = len(query_list)  
