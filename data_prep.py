@@ -215,16 +215,3 @@ character_list = script_utterance.pivot_table(
   ).sort_values(by = "u_id", ascending = False)\
     .index.tolist()
 character_list.remove("#ALL#")
-
-if __name__ == "__main__":
-  # # print out the character list in descending order of their 
-  # # total utterances across ten seasons
-  # print(
-  #   [("", "Select a character")] + \
-  #     [(name, name.split(" ")[0]) for name in character_list[:20]]
-  # )
-  u_id = "s02_e14_c03_u009"
-  print(get_script_with_uid(script_utterance, u_id))
-  print(get_script_with_uid(script_utterance, u_id, 1))
-  print(get_script_with_uid(script_utterance, u_id, output_format = "html"))
-  print(get_script_with_uid(script_utterance, u_id, 2, output_format = "html"))
