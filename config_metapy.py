@@ -21,7 +21,7 @@ corpus = "tutorial.toml"
 index = "./data/friends-idx"
 
 query-judgements = "./data/friends-qrels.txt"
-stop-words = "./data/lemur-stopwords.txt"
+stop-words = "./data/stopwords.txt"
 
 [[analyzers]]
 method = "ngram-word"
