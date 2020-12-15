@@ -22,7 +22,9 @@ The FRIENDS corpus data comes from github repository [emorynlp/character-mining]
 
 ## Source files  
 
-***&nbsp;&nbsp;&nbsp;major Python scripts***  
+&nbsp;&nbsp;&nbsp;
+![#c5f015](https://via.placeholder.com/15/c5f015/000000?text=+)
+***Python scripts***  
 ├── config_metapy.py *# set up the baseline model (metapy)*  
 ├── data_prep.py *# read in and pre-process data*  
 ├── helper_func.py *# defines helper functions*  
