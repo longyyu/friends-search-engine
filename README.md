@@ -1,14 +1,13 @@
 # Search Engine for Friends Quotes  
 
-A vertical search engine for scripts of FRIENDS, the popular American TV sitcom produced by Warner Bros.  
+A vertical search engine for scripts of FRIENDS, the popular American TV sitcom.  
 **Visit the web app [here](http://longyyu.pythonanywhere.com/)!**&nbsp;&nbsp;
 *(link to web app last updated on Dec 15, 2020)*  
 
 ## About  
 
 This is the term project for SI650 / EECS549 at the University of Michigan.  
-The FRIENDS corpus data comes from github repository [emorynlp
-/character-mining](https://github.com/emorynlp/character-mining).
+The FRIENDS corpus data comes from github repository [emorynlp/character-mining](https://github.com/emorynlp/character-mining).
 
 ## Installation  
 ***Note: this project is written in Python3 (3.7).*** 
