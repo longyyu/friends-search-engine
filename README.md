@@ -36,7 +36,8 @@ The FRIENDS corpus data comes from github repository [emorynlp/character-mining]
 ├── **data**  
 │   ├── json.tar.gz *# original FRIENDS corpus data in JSON format, archived*  
 │   ├── script_id_speaker_10seasons.tsv *# pre-processed FRIENDS corpus data*  
-│   ├── stopwords.txt *# stop words data*  
+│   ├── lemur-stopwords.txt *# the baseline stop words data*
+│   ├── stopwords.txt *# stop words data, personal pronouns removed*  
 │   ├── friends-qrels.txt *# query judgement data for ranker evaluation purpose*  
 │   ├── friends-queries.txt *# testing queries*  
 │   ├── friends-config.toml *# metapy config file*  
