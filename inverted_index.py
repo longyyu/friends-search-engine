@@ -170,7 +170,7 @@ class Indexes:
     score_qtf = self.query_term_freq[term]
     return(score_idf * score_tf * score_qtf)
   
-  def score_es(self, term, doc_id):
+  def score_es(self, term, doc_id, s = 0.45):
     # a term-weighting function developed by a evolutionary learning approach
     # [Cummins & O’Riordan, 2007]
     score_idf = math.sqrt(
@@ -178,16 +178,16 @@ class Indexes:
       (self.doc_freq[term]**4)
     )
     tf_term_doc = self.term_to_freq_pos[(doc_id, term)][0]
-    score_tf = (tf_term_doc) / (tf_term_doc + 0.45 * math.sqrt(
+    score_tf = (tf_term_doc) / (tf_term_doc + s * math.sqrt(
       self.doc_length[doc_id] / self.avg_doc_length))
     score_qtf = self.query_term_freq[term]
     return(score_idf * score_tf * score_qtf)
   
-  def score_f2exp(self, term, doc_id):
-    score_idf = (self.doc_count / self.doc_freq[term])**0.35
+  def score_f2exp(self, term, doc_id, k = 0.35, b = 0.5):
+    score_idf = (self.doc_count / self.doc_freq[term])**k
     tf_term_doc = self.term_to_freq_pos[(doc_id, term)][0]
-    score_tf = (tf_term_doc / (tf_term_doc + 0.5 + \
-                0.5 * self.doc_length[doc_id] / self.avg_doc_length))
+    score_tf = (tf_term_doc / (tf_term_doc + (1 - b) + \
+                b * self.doc_length[doc_id] / self.avg_doc_length))
     score_qtf = self.query_term_freq[term]
     return(score_idf * score_tf * score_qtf)
 

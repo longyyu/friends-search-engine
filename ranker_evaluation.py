@@ -224,10 +224,36 @@ if __name__ == "__main__":
   )[["ranker", "params", "ap", "ndcg"]]
   print(rankers_eval.sort_values(by = "ap", ascending = False).head(10))
 
-  # others: ES & F2EXP ----------------------------------------------------
-  print(
-    pd.concat(
-      [evaluate_ranker(ranker = "es"), evaluate_ranker(ranker = "f2exp")],
-      ignore_index = True
-    )[["ranker", "params", "ap", "ndcg"]]
-  )
+  # es ------------------------------------------------------------------
+  rankers = pd.DataFrame(dict(
+    ranker = "es", s = np.arange(0.05, 1.00, 0.05).tolist()
+  ))
+  rankers_eval = pd.concat(
+    list(rankers.apply(
+      lambda row: evaluate_ranker(
+        ranker = row["ranker"], s = row["s"]
+      ), axis = 1
+    )), 
+    ignore_index = True
+  )[["ranker", "params", "ap", "ndcg"]]
+  print(rankers_eval.sort_values(by = "ap", ascending = False).head(10))
+
+  # f2exp ---------------------------------------------------------------
+  k_val = np.arange(0.05, 0.75, 0.05).tolist()
+  b_val = np.arange(0, 1.1, 0.1).tolist()
+  rankers = pd.DataFrame(dict(
+    ranker = "f2exp", 
+    k = list(chain.from_iterable(
+      [[val] * len(b_val) for val in k_val]
+    )),
+    b = b_val * len(k_val)
+  ))
+  rankers_eval = pd.concat(
+    list(rankers.apply(
+      lambda row: evaluate_ranker(
+        ranker = row["ranker"], k = row["k"], b = row["b"]
+      ), axis = 1
+    )), 
+    ignore_index = True
+  )[["ranker", "params", "ap", "ndcg"]]
+  print(rankers_eval.sort_values(by = "ap", ascending = False).head(10))
