@@ -14,7 +14,7 @@ from data_prep import script_utterance, get_script_with_uid
 #          a query. It also defines a get_retrieval_results function 
 #          based on the Indexes class. 
 # Author: Yanyu Long
-# Updated: Dec 14, 2020
+# Updated: Dec 16, 2020
 
 class Indexes:
   def __init__(self, documents, stop_words, doc_id = None, stem = False):
@@ -191,12 +191,13 @@ class Indexes:
     score_qtf = self.query_term_freq[term]
     return(score_idf * score_tf * score_qtf)
 
-  def score_tsl(self, term, doc_id, mu = 3500):
+  def score_tsl(self, term, doc_id, mu = 3500, lbda = 0):
     tf_term_doc = self.term_to_freq_pos[(doc_id, term)][0]
-    score = (tf_term_doc + \
+    score_term1 = (tf_term_doc + \
         mu * self.corpus_term_freq[term] / len(self.corpus_term_freq)
       ) / (self.doc_length[doc_id] + mu)
-    return(score)
+    score_term2 = self.corpus_term_freq[term] / len(self.corpus_term_freq)
+    return((1 - lbda) * score_term1 + lbda * score_term2)
   
   def rank_doc(self, query, ranker, doc_id_list = None, **kwargs):
     # inputs:

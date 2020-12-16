@@ -7,7 +7,7 @@ from data_prep import query_list, query_relevance, uid_to_rowidx
 # Purpose: This script defines functions that are used to evaluate a 
 #          information retrieval model's performance. 
 # Author: Yanyu Long
-# Updated: Dec 14, 2020
+# Updated: Dec 16, 2020
 
 def calc_avg_precision(relevance_score):
   # input - relevance_score: an iterable object with numeric values
@@ -205,13 +205,19 @@ if __name__ == "__main__":
   print(rankers_eval.sort_values(by = "ap", ascending = False).head(10))
 
   # tsl ---------------------------------------------------------------
+  mu_val = np.arange(500, 8000, 500).tolist()
+  lbda_val = np.arange(0, 1.1, 0.1).tolist()
   rankers = pd.DataFrame(dict(
-    ranker = "tsl", mu = np.arange(4000, 8000, 200).tolist()
+    ranker = "tsl", 
+    mu = list(chain.from_iterable(
+      [[val] * len(lbda_val) for val in mu_val]
+    )),
+    lbda = lbda_val * len(mu_val)
   ))
   rankers_eval = pd.concat(
     list(rankers.apply(
       lambda row: evaluate_ranker(
-        ranker = row["ranker"], mu = row["mu"]
+        ranker = row["ranker"], mu = row["mu"], lbda = row["lbda"]
       ), axis = 1
     )), 
     ignore_index = True
