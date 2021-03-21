@@ -1,8 +1,8 @@
 # Search Engine for Friends Quotes  
 
 A vertical search engine for scripts of FRIENDS, the popular American TV sitcom.  
-**Visit the web app [here](http://longyyu.pythonanywhere.com/)!**&nbsp;&nbsp;
-*(link to web app last updated on Dec 15, 2020)*  
+**Visit the web app [here](http://longyyu.pythonanywhere.com/) or the [blog post](http://longyyu.pythonanywhere.com/static/blogpost.html)!**&nbsp;&nbsp;
+*(links to the web app and blog post last updated on Mar 22, 2021)*  
 
 ## About  
 
